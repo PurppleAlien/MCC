@@ -58,6 +58,21 @@ public final class DireccionEnvio {
         validarNoNuloOVC(codigoPostal, "Código Postal");
         validarNoNuloOVC(pais, "País");
 
+        // RN-VO-04: El país debe ser "México"
+        if (!pais.equalsIgnoreCase("México") && !pais.equalsIgnoreCase("Mexico")) {
+            throw new IllegalArgumentException("Por ahora solo se permiten envíos nacionales (México)");
+        }
+
+        // RN-ORD-03: El código postal debe tener 5 dígitos
+        if (codigoPostal == null || !codigoPostal.matches("\\d{5}")) {
+            throw new IllegalArgumentException("El código postal debe tener exactamente 5 dígitos");
+        }
+
+        // RN-ORD-04: El teléfono de contacto debe tener 10 dígitos
+        if (telefono == null || !telefono.matches("\\d{10}")) {
+            throw new IllegalArgumentException("El teléfono debe tener exactamente 10 dígitos");
+        }
+
         this.nombreDestinatario = nombreDestinatario;
         this.calle = calle;
         this.ciudad = ciudad;

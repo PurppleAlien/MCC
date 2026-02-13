@@ -57,7 +57,11 @@ public final class Money {
 
     public Money restar(Money otro) {
         validarMismaMoneda(otro);
-        return new Money(this.cantidad.subtract(otro.cantidad), this.moneda);
+        BigDecimal resultado = this.cantidad.subtract(otro.cantidad);
+        if (resultado.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El resultado de la resta no puede ser negativo");
+        }
+        return new Money(resultado, this.moneda);
     }
 
     public Money multiplicar(int factor) {

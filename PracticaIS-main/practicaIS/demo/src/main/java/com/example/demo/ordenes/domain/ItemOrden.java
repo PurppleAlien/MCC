@@ -75,6 +75,11 @@ public class ItemOrden {
         if (precioUnitario == null)
             throw new IllegalArgumentException("El precio unitario no puede ser nulo");
 
+        // RN-VO-05: El SKU debe tener formato AAA-000 (3 letras, guión, 3 números)
+        if (sku == null || !sku.matches("[A-Z]{3}-\\d{3}")) {
+            throw new IllegalArgumentException("El SKU debe tener el formato AAA-000 (ej. ABC-123)");
+        }
+
         this.id = id;
         this.productoId = productoId;
         this.nombreProducto = nombreProducto;
