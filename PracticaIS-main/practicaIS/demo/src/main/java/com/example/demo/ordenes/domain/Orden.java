@@ -42,9 +42,11 @@ public class Orden {
     private List<ItemOrden> items = new ArrayList<>();
 
     @Embedded
+    @AttributeOverride(name = "estado", column = @Column(name = "direccion_estado"))
     private DireccionEnvio direccionEnvio;
 
     @Embedded
+    @AttributeOverride(name = "estado", column = @Column(name = "pago_estado"))
     private ResumenPago resumenPago;
 
     @Embedded
