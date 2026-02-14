@@ -28,11 +28,13 @@ import jakarta.persistence.Table;
 public class Orden {
 
     @EmbeddedId
+    @AttributeOverride(name = "valor", column = @Column(name = "id"))
     private OrdenId id;
 
     private String numeroOrden;
 
     @Embedded
+    @AttributeOverride(name = "valor", column = @Column(name = "cliente_id"))
     private ClienteId clienteId;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
