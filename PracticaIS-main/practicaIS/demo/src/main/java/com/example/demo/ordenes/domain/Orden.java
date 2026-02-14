@@ -28,11 +28,13 @@ import jakarta.persistence.Table;
 public class Orden {
 
     @EmbeddedId
+    @AttributeOverride(name = "valor", column = @Column(name = "id"))
     private OrdenId id;
 
     private String numeroOrden;
 
     @Embedded
+    @AttributeOverride(name = "valor", column = @Column(name = "cliente_id"))
     private ClienteId clienteId;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -40,9 +42,11 @@ public class Orden {
     private List<ItemOrden> items = new ArrayList<>();
 
     @Embedded
+    @AttributeOverride(name = "estado", column = @Column(name = "direccion_estado"))
     private DireccionEnvio direccionEnvio;
 
     @Embedded
+    @AttributeOverride(name = "estado", column = @Column(name = "pago_estado"))
     private ResumenPago resumenPago;
 
     @Embedded

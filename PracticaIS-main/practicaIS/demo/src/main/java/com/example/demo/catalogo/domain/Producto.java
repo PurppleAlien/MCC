@@ -1,4 +1,5 @@
 package com.example.demo.catalogo.domain;
+
 import jakarta.persistence.*;
 import java.util.List;
 import java.time.LocalDateTime;
@@ -8,28 +9,45 @@ import java.math.BigDecimal;
 @Entity
 public class Producto {
 
-     @Id
+    @EmbeddedId
     private ProductoId id;
+
     private String nombre;
+    private String descripcion;
+
+    @Embedded
     private Money precio;
+
+    @Embedded
+    @AttributeOverride(name = "id", column = @Column(name = "categoria_id"))
+    private CategoriaId categoriaId;
+
+    @ElementCollection
+    @CollectionTable(name = "producto_imagenes", joinColumns = @JoinColumn(name = "producto_id"))
     private List<Imagen> imagenes;
+
     private Boolean disponible;
     private LocalDateTime fechaCreacion;
 
+    protected Producto() {
+    }
 
-  public Producto(ProductoId id, String nombre, Money precio, String descripcion, CategoriaId categoriaId) {
-        if (id == null) throw new IllegalArgumentException("Id obligatorio");
+    public Producto(ProductoId id, String nombre, Money precio, String descripcion, CategoriaId categoriaId) {
+        if (id == null)
+            throw new IllegalArgumentException("Id obligatorio");
         if (nombre == null || nombre.isBlank())
             throw new IllegalArgumentException("Nombre obligatorio");
-        if (precio == null) throw new IllegalArgumentException("Precio obligatorio");
+        if (precio == null)
+            throw new IllegalArgumentException("Precio obligatorio");
 
         this.id = id;
         this.nombre = nombre;
+        this.descripcion = descripcion;
         this.precio = precio;
+        this.categoriaId = categoriaId;
         this.disponible = true;
         this.fechaCreacion = LocalDateTime.now();
     }
-
 
     public ProductoId getId() {
         return id;
@@ -55,109 +73,111 @@ public class Producto {
         return fechaCreacion;
     }
 
-   public static Producto crear(
-        String nombre,
-        String descripcion,
-        Money precio,
-        CategoriaId categoriaId
-) {
-    if (nombre.length() < 3 || nombre.length() > 100) {
-        throw new IllegalArgumentException("El nombre debe tener entre 3 y 100 caracteres");
-    }
-    if (descripcion.length() > 500) {
-        throw new IllegalArgumentException("La descripción debe tener menos de 500 caracteres");
-    }
-    if (precio.cantidad().signum() <= 0) {
-        throw new IllegalArgumentException("El precio debe ser mayor a 0");
+    public String getDescripcion() {
+        return descripcion;
     }
 
-    return new Producto(
-            ProductoId.generar(),
-            nombre,
-            precio,
-            descripcion,
-            categoriaId
-    );
-}
- public void CambiarPrecio(Money nuevoPrecio) {
-    // regla 1: el precio no puede ser negativo
-    if (nuevoPrecio.cantidad().compareTo(BigDecimal.ZERO) < 0) {
-        throw new IllegalArgumentException("El precio no puede ser negativo");
+    public CategoriaId getCategoriaId() {
+        return categoriaId;
     }
 
-    // Regla 2: no aumentar más del 50%
-    BigDecimal maximoPermitido =
-            this.precio.cantidad().multiply(BigDecimal.valueOf(1.5));
+    public static Producto crear(
+            String nombre,
+            String descripcion,
+            Money precio,
+            CategoriaId categoriaId) {
+        if (nombre.length() < 3 || nombre.length() > 100) {
+            throw new IllegalArgumentException("El nombre debe tener entre 3 y 100 caracteres");
+        }
+        if (descripcion.length() > 500) {
+            throw new IllegalArgumentException("La descripción debe tener menos de 500 caracteres");
+        }
+        if (precio.cantidad().signum() <= 0) {
+            throw new IllegalArgumentException("El precio debe ser mayor a 0");
+        }
 
-    if (nuevoPrecio.cantidad().compareTo(maximoPermitido) > 0) {
-        throw new IllegalArgumentException(
-            "El precio no puede incrementarse más del 50% en un solo cambio"
-        );
+        return new Producto(
+                ProductoId.generar(),
+                nombre,
+                precio,
+                descripcion,
+                categoriaId);
     }
 
-    this.precio = nuevoPrecio;
- }
- public void agregarImagen(Imagen imagen) {
-  if (imagen == null) {
-        throw new IllegalArgumentException("La imagen no puede ser nula");
+    public void CambiarPrecio(Money nuevoPrecio) {
+        // regla 1: el precio no puede ser negativo
+        if (nuevoPrecio.cantidad().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El precio no puede ser negativo");
+        }
+
+        // Regla 2: no aumentar más del 50%
+        BigDecimal maximoPermitido = this.precio.cantidad().multiply(BigDecimal.valueOf(1.5));
+
+        if (nuevoPrecio.cantidad().compareTo(maximoPermitido) > 0) {
+            throw new IllegalArgumentException(
+                    "El precio no puede incrementarse más del 50% en un solo cambio");
+        }
+
+        this.precio = nuevoPrecio;
     }
 
-    if (this.imagenes == null) {
-        this.imagenes = new ArrayList<>();
+    public void agregarImagen(Imagen imagen) {
+        if (imagen == null) {
+            throw new IllegalArgumentException("La imagen no puede ser nula");
+        }
+
+        if (this.imagenes == null) {
+            this.imagenes = new ArrayList<>();
+        }
+
+        if (this.imagenes.size() >= 5) {
+            throw new IllegalArgumentException("No se pueden agregar más de 5 imágenes");
+        }
+
+        String url = imagen.url();
+        if (url == null ||
+                !(url.startsWith("http://") || url.startsWith("https://"))) {
+            throw new IllegalArgumentException(
+                    "La URL de la imagen debe comenzar con http:// o https://");
+        }
+
+        this.imagenes.add(imagen);
     }
 
-    if (this.imagenes.size() >= 5) {
-        throw new IllegalArgumentException("No se pueden agregar más de 5 imágenes");
+    public void desactivar() {
+        if (this.disponible == null) {
+            this.disponible = true;
+        }
+
+        if (!this.disponible) {
+            throw new IllegalStateException(
+                    "El producto ya está desactivado y no puede desactivarse nuevamente");
+        }
+
+        this.disponible = false;
     }
 
-    String url = imagen.url();
-    if (url == null || 
-        !(url.startsWith("http://") || url.startsWith("https://"))) {
-        throw new IllegalArgumentException(
-            "La URL de la imagen debe comenzar con http:// o https://"
-        );
+    public void activar() {
+        if (this.disponible == null) {
+            this.disponible = false; // estado inicial seguro
+        }
+
+        if (this.disponible) {
+            throw new IllegalStateException("El producto ya está activo");
+        }
+
+        if (this.precio == null ||
+                this.precio.cantidad().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException(
+                    "No se puede activar un producto con precio menor o igual a 0");
+        }
+
+        if (this.imagenes == null || this.imagenes.isEmpty()) {
+            throw new IllegalStateException(
+                    "No se puede activar un producto sin al menos una imagen");
+        }
+
+        this.disponible = true;
     }
-
-    this.imagenes.add(imagen);
- }
-
-public void desactivar() {
-    if (this.disponible == null) {
-        this.disponible = true; 
-    }
-
-    if (!this.disponible) {
-        throw new IllegalStateException(
-            "El producto ya está desactivado y no puede desactivarse nuevamente"
-        );
-    }
-
-    this.disponible = false;
-}
-
-public void activar() {
-    if (this.disponible == null) {
-        this.disponible = false; // estado inicial seguro
-    }
-
-    if (this.disponible) {
-        throw new IllegalStateException("El producto ya está activo");
-    }
-
-    if (this.precio == null ||
-        this.precio.cantidad().compareTo(BigDecimal.ZERO) <= 0) {
-        throw new IllegalStateException(
-            "No se puede activar un producto con precio menor o igual a 0"
-        );
-    }
-
-    if (this.imagenes == null || this.imagenes.isEmpty()) {
-        throw new IllegalStateException(
-            "No se puede activar un producto sin al menos una imagen"
-        );
-    }
-
-    this.disponible = true;
-}
 
 }

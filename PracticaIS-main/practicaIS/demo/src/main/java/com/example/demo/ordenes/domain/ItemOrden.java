@@ -19,9 +19,11 @@ import jakarta.persistence.Table;
 public class ItemOrden {
 
     @EmbeddedId
+    @AttributeOverride(name = "valor", column = @Column(name = "id"))
     private ItemOrdenId id;
 
     @Embedded
+    @AttributeOverride(name = "valor", column = @Column(name = "producto_id"))
     private ProductoId productoId;
 
     private String nombreProducto;
