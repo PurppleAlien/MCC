@@ -1,6 +1,6 @@
 package com.example.demo.catalogo.domain;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 
 @Entity
 public class Categoria {
@@ -14,9 +14,6 @@ public class Categoria {
     @AttributeOverride(name = "id", column = @Column(name = "categoria_padre_id"))
     private CategoriaId categoriaPadreId;
 
-    /**
-     * Constructor protegido para JPA.
-     */
     protected Categoria() {
     }
 

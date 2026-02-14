@@ -11,10 +11,16 @@ public class Producto {
 
     @EmbeddedId
     private ProductoId id;
+
     private String nombre;
+    private String descripcion;
 
     @Embedded
     private Money precio;
+
+    @Embedded
+    @AttributeOverride(name = "id", column = @Column(name = "categoria_id"))
+    private CategoriaId categoriaId;
 
     @ElementCollection
     @CollectionTable(name = "producto_imagenes", joinColumns = @JoinColumn(name = "producto_id"))
@@ -36,7 +42,9 @@ public class Producto {
 
         this.id = id;
         this.nombre = nombre;
+        this.descripcion = descripcion;
         this.precio = precio;
+        this.categoriaId = categoriaId;
         this.disponible = true;
         this.fechaCreacion = LocalDateTime.now();
     }
@@ -63,6 +71,14 @@ public class Producto {
 
     public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public CategoriaId getCategoriaId() {
+        return categoriaId;
     }
 
     public static Producto crear(
