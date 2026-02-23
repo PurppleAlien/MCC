@@ -1,6 +1,7 @@
 package com.example.demo.ordenes.domain;
 
 import com.example.demo.catalogo.domain.ProductoId;
+import com.example.demo.shared.domain.Money;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;

@@ -1,13 +1,10 @@
 package com.example.demo.ordenes.domain;
 
-import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;
+import java.util.Objects;
 
-/**
- * Captura completa de la dirección de entrega al momento de la compra.
- * Es inmutable para mantener el registro histórico exacto de dónde se envió el
- * pedido.
- */
 @Embeddable
 public final class DireccionEnvio {
 
@@ -20,9 +17,6 @@ public final class DireccionEnvio {
     private final String telefono;
     private final String instrucciones;
 
-    /**
-     * Constructor protegido para frameworks de persistencia.
-     */
     protected DireccionEnvio() {
         this.nombreDestinatario = null;
         this.calle = null;
@@ -34,22 +28,16 @@ public final class DireccionEnvio {
         this.instrucciones = null;
     }
 
-    /**
-     * Crea una nueva instancia de DireccionEnvio.
-     * 
-     * @param nombreDestinatario Nombre de quien recibe.
-     * @param calle              Calle y número.
-     * @param ciudad             Ciudad.
-     * @param estado             Estado o provincia.
-     * @param codigoPostal       Código postal.
-     * @param pais               País.
-     * @param telefono           Teléfono de contacto.
-     * @param instrucciones      Instrucciones adicionales de entrega.
-     * @throws IllegalArgumentException si los campos obligatorios son nulos o
-     *                                  vacíos.
-     */
-    public DireccionEnvio(String nombreDestinatario, String calle, String ciudad, String estado,
-            String codigoPostal, String pais, String telefono, String instrucciones) {
+    @JsonCreator
+    public DireccionEnvio(
+            @JsonProperty("nombreDestinatario") String nombreDestinatario,
+            @JsonProperty("calle") String calle,
+            @JsonProperty("ciudad") String ciudad,
+            @JsonProperty("estado") String estado,
+            @JsonProperty("codigoPostal") String codigoPostal,
+            @JsonProperty("pais") String pais,
+            @JsonProperty("telefono") String telefono,
+            @JsonProperty("instrucciones") String instrucciones) {
 
         validarNoNuloOVC(nombreDestinatario, "Nombre del destinatario");
         validarNoNuloOVC(calle, "Calle");
@@ -58,17 +46,14 @@ public final class DireccionEnvio {
         validarNoNuloOVC(codigoPostal, "Código Postal");
         validarNoNuloOVC(pais, "País");
 
-        // RN-VO-04: El país debe ser "México"
         if (!pais.equalsIgnoreCase("México") && !pais.equalsIgnoreCase("Mexico")) {
             throw new IllegalArgumentException("Por ahora solo se permiten envíos nacionales (México)");
         }
 
-        // RN-ORD-03: El código postal debe tener 5 dígitos
         if (codigoPostal == null || !codigoPostal.matches("\\d{5}")) {
             throw new IllegalArgumentException("El código postal debe tener exactamente 5 dígitos");
         }
 
-        // RN-ORD-04: El teléfono de contacto debe tener 10 dígitos
         if (telefono == null || !telefono.matches("\\d{10}")) {
             throw new IllegalArgumentException("El teléfono debe tener exactamente 10 dígitos");
         }
@@ -89,11 +74,6 @@ public final class DireccionEnvio {
         }
     }
 
-    /**
-     * Formatea la dirección completa en una cadena legible.
-     * 
-     * @return Dirección formateada.
-     */
     public String formatear() {
         StringBuilder sb = new StringBuilder();
         sb.append(nombreDestinatario).append("\n");
@@ -109,45 +89,19 @@ public final class DireccionEnvio {
         return sb.toString();
     }
 
-    // Getters
-    public String getNombreDestinatario() {
-        return nombreDestinatario;
-    }
-
-    public String getCalle() {
-        return calle;
-    }
-
-    public String getCiudad() {
-        return ciudad;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
-    public String getCodigoPostal() {
-        return codigoPostal;
-    }
-
-    public String getPais() {
-        return pais;
-    }
-
-    public String getTelefono() {
-        return telefono;
-    }
-
-    public String getInstrucciones() {
-        return instrucciones;
-    }
+    public String getNombreDestinatario() { return nombreDestinatario; }
+    public String getCalle() { return calle; }
+    public String getCiudad() { return ciudad; }
+    public String getEstado() { return estado; }
+    public String getCodigoPostal() { return codigoPostal; }
+    public String getPais() { return pais; }
+    public String getTelefono() { return telefono; }
+    public String getInstrucciones() { return instrucciones; }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         DireccionEnvio that = (DireccionEnvio) o;
         return Objects.equals(nombreDestinatario, that.nombreDestinatario) &&
                 Objects.equals(calle, that.calle) &&

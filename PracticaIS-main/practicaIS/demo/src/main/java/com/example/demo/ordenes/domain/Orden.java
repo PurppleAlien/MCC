@@ -1,5 +1,7 @@
 package com.example.demo.ordenes.domain;
 
+import com.example.demo.shared.domain.Money;
+import com.example.demo.shared.domain.ClienteId; // <-- IMPORTACIÓN AGREGADA
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;

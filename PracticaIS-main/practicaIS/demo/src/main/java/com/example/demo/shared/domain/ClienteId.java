@@ -1,30 +1,21 @@
-package com.example.demo.ordenes.domain;
+package com.example.demo.shared.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import jakarta.persistence.Embeddable;
 import java.util.Objects;
 import java.util.UUID;
-import jakarta.persistence.Embeddable;
 
-/**
- * Referencia al cliente que realizó la compra.
- */
 @Embeddable
 public final class ClienteId {
 
     private final UUID valor;
 
-    /**
-     * Constructor protegido para frameworks de persistencia.
-     */
     protected ClienteId() {
         this.valor = null;
     }
 
-    /**
-     * Crea una instancia de ClienteId a partir de un UUID.
-     * 
-     * @param valor El UUID del cliente.
-     * @throws IllegalArgumentException si el valor es nulo.
-     */
+    @JsonCreator
     public ClienteId(UUID valor) {
         if (valor == null) {
             throw new IllegalArgumentException("El valor del ID de cliente no puede ser nulo");
@@ -32,15 +23,6 @@ public final class ClienteId {
         this.valor = valor;
     }
 
-    /**
-     * Método de fábrica para crear un ClienteId a partir de una cadena de texto
-     * (String).
-     * 
-     * @param id La cadena que representa el UUID.
-     * @return Una nueva instancia de ClienteId.
-     * @throws IllegalArgumentException si el formato de la cadena no es un UUID
-     *                                  válido.
-     */
     public static ClienteId of(String id) {
         try {
             return new ClienteId(UUID.fromString(id));
@@ -49,21 +31,15 @@ public final class ClienteId {
         }
     }
 
-    /**
-     * Obtiene el valor UUID del cliente.
-     * 
-     * @return El UUID.
-     */
+    @JsonValue
     public UUID getValue() {
         return valor;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         ClienteId clienteId = (ClienteId) o;
         return Objects.equals(valor, clienteId.valor);
     }

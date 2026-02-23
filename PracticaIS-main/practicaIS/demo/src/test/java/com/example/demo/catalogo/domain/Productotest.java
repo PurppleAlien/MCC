@@ -1,60 +1,85 @@
 package com.example.demo.catalogo.domain;
 
+import com.example.demo.shared.domain.Money;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-//import java.math.BigDecimal;
-
-
 public class Productotest {
+
     @Test
     void CrearProductoCorrecto() {
         String nombre = "Laptop";
         String descripcion = "Laptop de alto rendimiento";
         Money precio = Money.pesos(25000);
         CategoriaId categoriaId = CategoriaId.generar();
+        int stock = 10;
+        String sku = "ABC-123"; // SKU válido
 
-        Producto producto = Producto.crear(nombre, descripcion, precio, categoriaId);
+        Producto producto = Producto.crear(nombre, descripcion, precio, stock, sku, categoriaId);
 
         assertNotNull(producto);
         assertNotNull(producto.getId());
         assertEquals(nombre, producto.getNombre());
         assertEquals(precio, producto.getPrecio());
+        assertEquals(stock, producto.getStock());
+        assertEquals(sku, producto.getSku()); // Verificar SKU
         assertTrue(producto.getDisponible());
         assertNotNull(producto.getFechaCreacion());
     }
 
-@Test
- void CrearProductoConNombreMuyCorto() {
+    @Test
+    void CrearProductoConNombreMuyCorto() {
         String nombre = "La";
         String descripcion = "Descripcion correcta";
         Money precio = Money.pesos(1000);
         CategoriaId categoriaId = CategoriaId.generar();
+        int stock = 10;
+        String sku = "ABC-123";
 
         assertThrows(IllegalArgumentException.class, () ->
-                Producto.crear(nombre, descripcion, precio, categoriaId)
+                Producto.crear(nombre, descripcion, precio, stock, sku, categoriaId)
         );
     }
-      @Test
+
+    @Test
     void CrearProductoConPrecioCero() {
         String nombre = "Laptop";
         String descripcion = "Descripcion correcta";
         Money precio = Money.pesos(0);
         CategoriaId categoriaId = CategoriaId.generar();
+        int stock = 10;
+        String sku = "ABC-123";
 
         assertThrows(IllegalArgumentException.class, () ->
-                Producto.crear(nombre, descripcion, precio, categoriaId)
+                Producto.crear(nombre, descripcion, precio, stock, sku, categoriaId)
         );
     }
- @Test
+
+    @Test
+    void CrearProductoConStockNegativo() {
+        String nombre = "Laptop";
+        String descripcion = "Descripcion correcta";
+        Money precio = Money.pesos(1000);
+        CategoriaId categoriaId = CategoriaId.generar();
+        int stock = -5;
+        String sku = "ABC-123";
+
+        assertThrows(IllegalArgumentException.class, () ->
+                Producto.crear(nombre, descripcion, precio, stock, sku, categoriaId)
+        );
+    }
+
+    @Test
     void CambiarPrecioCorrecto() {
         String nombre = "Laptop";
         String descripcion = "Laptop de alto rendimiento";
         Money precioInicial = Money.pesos(10000);
         CategoriaId categoriaId = CategoriaId.generar();
+        int stock = 10;
+        String sku = "ABC-123";
 
-        Producto producto = Producto.crear(nombre, descripcion, precioInicial, categoriaId);
+        Producto producto = Producto.crear(nombre, descripcion, precioInicial, stock, sku, categoriaId);
 
         Money nuevoPrecio = Money.pesos(14000);
         producto.CambiarPrecio(nuevoPrecio);
@@ -68,8 +93,10 @@ public class Productotest {
         String descripcion = "Laptop de alto rendimiento";
         Money precioInicial = Money.pesos(10000);
         CategoriaId categoriaId = CategoriaId.generar();
+        int stock = 10;
+        String sku = "ABC-123";
 
-        Producto producto = Producto.crear(nombre, descripcion, precioInicial, categoriaId);
+        Producto producto = Producto.crear(nombre, descripcion, precioInicial, stock, sku, categoriaId);
 
         Money nuevoPrecio = Money.pesos(-100);
 
@@ -78,13 +105,14 @@ public class Productotest {
         );
     }
 
-
     @Test
     void DesactivarProducto() {
         Producto producto = Producto.crear(
                 "Laptop",
                 "Laptop de alto rendimiento",
                 Money.pesos(25000),
+                10,
+                "ABC-123",
                 CategoriaId.generar()
         );
 
@@ -99,6 +127,8 @@ public class Productotest {
                 "Laptop",
                 "Laptop de alto rendimiento",
                 Money.pesos(25000),
+                10,
+                "ABC-123",
                 CategoriaId.generar()
         );
 
@@ -108,8 +138,6 @@ public class Productotest {
                 producto.desactivar()
         );
     }
-            
-   
 
     @Test
     void noDebeActivarProductoSinImagenes() {
@@ -117,44 +145,55 @@ public class Productotest {
                 "Laptop",
                 "Laptop de alto rendimiento",
                 Money.pesos(25000),
+                10,
+                "ABC-123",
                 CategoriaId.generar()
         );
+
+        producto.desactivar();
 
         assertThrows(IllegalStateException.class, () ->
                 producto.activar()
         );
     }
-   @Test
-void agregarImagenCorrectamente() {
-    Producto producto = Producto.crear(
-            "Laptop",
-            "Laptop de alto rendimiento",
-            Money.pesos(25000),
-            CategoriaId.generar()
-    );
 
-    Imagen imagen = Imagen.generar();
+    @Test
+    void agregarImagenCorrectamente() {
+        Producto producto = Producto.crear(
+                "Laptop",
+                "Laptop de alto rendimiento",
+                Money.pesos(25000),
+                10,
+                "ABC-123",
+                CategoriaId.generar()
+        );
 
-    producto.agregarImagen(imagen);
+        Imagen imagen = Imagen.generar();
 
-    assertEquals(1, producto.getImagenes().size());
-}
+        producto.agregarImagen(imagen);
 
-@Test
-void agregarmasDeCincoImagenes() {
-    Producto producto = Producto.crear(
-            "Laptop",
-            "Laptop de alto rendimiento",
-            Money.pesos(25000),
-            CategoriaId.generar()
-    );
-    for (int i = 0; i < 5; i++) {
-        producto.agregarImagen(Imagen.generar());
+        assertEquals(1, producto.getImagenes().size());
     }
-    Imagen imagenExtra = Imagen.generar();
-    assertThrows(IllegalArgumentException.class, () ->
-            producto.agregarImagen(imagenExtra)
-    );
 
-} 
+    @Test
+    void agregarMasDeCincoImagenes() {
+        Producto producto = Producto.crear(
+                "Laptop",
+                "Laptop de alto rendimiento",
+                Money.pesos(25000),
+                10,
+                "ABC-123",
+                CategoriaId.generar()
+        );
+
+        for (int i = 0; i < 5; i++) {
+            producto.agregarImagen(Imagen.generar());
+        }
+
+        Imagen imagenExtra = Imagen.generar();
+
+        assertThrows(IllegalArgumentException.class, () ->
+                producto.agregarImagen(imagenExtra)
+        );
+    }
 }

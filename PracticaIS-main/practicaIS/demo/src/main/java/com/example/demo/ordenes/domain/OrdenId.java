@@ -1,8 +1,10 @@
 package com.example.demo.ordenes.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import jakarta.persistence.Embeddable;
 import java.util.Objects;
 import java.util.UUID;
-import jakarta.persistence.Embeddable;
 
 /**
  * Representa el identificador único e inmutable de una Orden dentro del
@@ -11,25 +13,13 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public final class OrdenId {
 
-    /**
-     * El valor único universal del identificador.
-     */
     private final UUID valor;
 
-    /**
-     * Constructor protegido para uso exclusivo de frameworks de persistencia
-     * (JPA/Hibernate).
-     */
     protected OrdenId() {
         this.valor = null;
     }
 
-    /**
-     * Crea una instancia de OrdenId a partir de un UUID existente.
-     * 
-     * @param valor El UUID que se asignará al identificador.
-     * @throws IllegalArgumentException si el valor es nulo.
-     */
+    @JsonCreator
     public OrdenId(UUID valor) {
         if (valor == null) {
             throw new IllegalArgumentException("El valor del ID no puede ser nulo");
@@ -37,30 +27,19 @@ public final class OrdenId {
         this.valor = valor;
     }
 
-    /**
-     * Genera un nuevo OrdenId con un valor aleatorio (UUID v4).
-     * 
-     * @return Una nueva instancia de OrdenId.
-     */
     public static OrdenId generar() {
         return new OrdenId(UUID.randomUUID());
     }
 
-    /**
-     * Obtiene el valor UUID contenido en este identificador.
-     * 
-     * @return El UUID de la orden.
-     */
+    @JsonValue
     public UUID getValue() {
         return valor;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         OrdenId ordenId = (OrdenId) o;
         return Objects.equals(valor, ordenId.valor);
     }
@@ -70,11 +49,6 @@ public final class OrdenId {
         return Objects.hash(valor);
     }
 
-    /**
-     * Retorna la representación en cadena de texto del identificador.
-     * 
-     * @return El UUID como String.
-     */
     @Override
     public String toString() {
         return valor != null ? valor.toString() : "null";
