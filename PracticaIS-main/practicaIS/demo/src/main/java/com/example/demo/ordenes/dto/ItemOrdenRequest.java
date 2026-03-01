@@ -1,6 +1,5 @@
 package com.example.demo.ordenes.dto;
-
-import com.example.demo.catalogo.domain.ProductoId;
+import com.example.demo.shared.domain.ProductoId;
 import com.example.demo.shared.domain.Money;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

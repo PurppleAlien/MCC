@@ -1,9 +1,9 @@
 package com.example.demo.ventas.service;
 
-import com.example.demo.catalogo.domain.Producto;
-import com.example.demo.catalogo.domain.ProductoId;
-import com.example.demo.catalogo.repository.ProductoJpaRepository;
+import com.example.demo.catalogo.api.CatalogoApi;
+import com.example.demo.catalogo.api.ProductoResumen;
 import com.example.demo.shared.domain.ClienteId;
+import com.example.demo.shared.domain.ProductoId;
 import com.example.demo.shared.exception.RecursoNoEncontradoException;
 import com.example.demo.shared.exception.StockInsuficienteException;
 import com.example.demo.ventas.domain.*;
@@ -15,11 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class CarritoService {
 
     private final CarritoRepository carritoRepository;
-    private final ProductoJpaRepository productoRepository;
+    private final CatalogoApi catalogoApi;
 
-    public CarritoService(CarritoRepository carritoRepository, ProductoJpaRepository productoRepository) {
+    public CarritoService(CarritoRepository carritoRepository, CatalogoApi catalogoApi) {
         this.carritoRepository = carritoRepository;
-        this.productoRepository = productoRepository;
+        this.catalogoApi = catalogoApi;
     }
 
     @Transactional
@@ -39,12 +39,14 @@ public class CarritoService {
     public Carrito agregarProducto(CarritoId carritoId, ProductoId productoId, int cantidad) {
         Carrito carrito = carritoRepository.findById(carritoId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Carrito", carritoId.getValor()));
-        Producto producto = productoRepository.findById(productoId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Producto", productoId.getValue()));
-        if (producto.getStock() < cantidad) {
-            throw new StockInsuficienteException(producto.getNombre(), cantidad, producto.getStock());
+
+        ProductoResumen producto = catalogoApi.obtenerProducto(productoId);
+
+        if (producto.stock() < cantidad) {
+            throw new StockInsuficienteException(producto.nombre(), cantidad, producto.stock());
         }
-        ProductoRef productoRef = new ProductoRef(productoId, producto.getPrecio());
+
+        ProductoRef productoRef = new ProductoRef(productoId, producto.precio());
         carrito.agregarProducto(productoRef, cantidad);
         return carritoRepository.save(carrito);
     }

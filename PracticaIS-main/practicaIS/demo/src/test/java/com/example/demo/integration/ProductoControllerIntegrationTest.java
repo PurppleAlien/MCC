@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ProductoControllerIntegrationTest {
 
-    private static final String BASE_URL = "/api/productos";
+    private static final String BASE_URL = "/api/v1/productos";
 
     @LocalServerPort
     private int port;
@@ -65,7 +65,7 @@ class ProductoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/productos - Debe crear producto con datos válidos")
+    @DisplayName("POST /api/v1/productos - Debe crear producto con datos válidos")
     void crearProducto_DatosValidos_Retorna201() {
         ProductoRequest request = new ProductoRequest();
         request.setNombre("Laptop Gamer");
@@ -74,7 +74,7 @@ class ProductoControllerIntegrationTest {
         request.setMoneda("MXN");
         request.setStock(10);
         request.setCategoriaId(categoriaId);
-        request.setSku("ABC-123"); // NUEVO: SKU obligatorio
+        request.setSku("ABC-123");
 
         HttpEntity<ProductoRequest> httpEntity = new HttpEntity<>(request);
         ResponseEntity<ProductoResponse> response = restTemplate.exchange(
@@ -90,7 +90,7 @@ class ProductoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/productos - Debe retornar 400 con datos inválidos")
+    @DisplayName("POST /api/v1/productos - Debe retornar 400 con datos inválidos")
     void crearProducto_DatosInvalidos_Retorna400() {
         ProductoRequest request = new ProductoRequest();
         request.setNombre(""); // nombre vacío
@@ -108,7 +108,7 @@ class ProductoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/productos/{id} - Debe retornar 404 si producto no existe")
+    @DisplayName("GET /api/v1/productos/{id} - Debe retornar 404 si producto no existe")
     void obtenerProducto_NoExiste_Retorna404() {
         UUID idInexistente = UUID.randomUUID();
         ResponseEntity<ApiError> response = restTemplate.getForEntity(

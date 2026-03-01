@@ -1,6 +1,6 @@
 package com.example.demo.ventas.domain;
 
-import com.example.demo.catalogo.domain.ProductoId;
+import com.example.demo.shared.domain.ProductoId; // <-- IMPORTACIÓN AGREGADA
 import com.example.demo.shared.domain.Money;
 import com.example.demo.shared.domain.ClienteId;  // Importar desde shared
 import org.junit.jupiter.api.Test;

@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CarritoControllerIntegrationTest {
 
-    private static final String BASE_URL = "/api/carritos";
+    private static final String BASE_URL = "/api/v1/carritos";
 
     @LocalServerPort
     private int port;
@@ -75,7 +75,7 @@ class CarritoControllerIntegrationTest {
                 "Laptop de alto rendimiento",
                 Money.pesos(25000),
                 10,
-                "ABC-123",  // SKU válido
+                "ABC-123",
                 new CategoriaId(categoriaId)
         );
         producto = productoRepository.save(producto);
@@ -90,7 +90,7 @@ class CarritoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/carritos - Debe crear carrito con clienteId válido")
+    @DisplayName("POST /api/v1/carritos - Debe crear carrito con clienteId válido")
     void crearCarrito_ClienteIdValido_Retorna201() {
         UUID clienteId = UUID.randomUUID();
         ResponseEntity<Carrito> response = restTemplate.postForEntity(
@@ -108,7 +108,7 @@ class CarritoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/carritos/{id} - Debe retornar carrito existente")
+    @DisplayName("GET /api/v1/carritos/{id} - Debe retornar carrito existente")
     void obtenerCarrito_Existente_Retorna200() {
         UUID clienteId = UUID.randomUUID();
         ResponseEntity<Carrito> createResponse = restTemplate.postForEntity(
@@ -124,7 +124,7 @@ class CarritoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/carritos/{id} - Debe retornar 404 si carrito no existe")
+    @DisplayName("GET /api/v1/carritos/{id} - Debe retornar 404 si carrito no existe")
     void obtenerCarrito_NoExistente_Retorna404() {
         UUID idInexistente = UUID.randomUUID();
         ResponseEntity<ApiError> response = restTemplate.getForEntity(
@@ -136,7 +136,7 @@ class CarritoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/carritos/{id}/productos - Debe agregar producto al carrito")
+    @DisplayName("POST /api/v1/carritos/{id}/productos - Debe agregar producto al carrito")
     void agregarProducto_DatosValidos_Retorna200() {
         UUID clienteId = UUID.randomUUID();
         ResponseEntity<Carrito> createResponse = restTemplate.postForEntity(
@@ -162,7 +162,7 @@ class CarritoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/carritos/{id}/productos - Debe retornar 404 si producto no existe")
+    @DisplayName("POST /api/v1/carritos/{id}/productos - Debe retornar 404 si producto no existe")
     void agregarProducto_ProductoNoExiste_Retorna404() {
         UUID clienteId = UUID.randomUUID();
         ResponseEntity<Carrito> createResponse = restTemplate.postForEntity(
@@ -184,7 +184,7 @@ class CarritoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/carritos/{id}/productos/{productoId} - Debe modificar cantidad")
+    @DisplayName("PATCH /api/v1/carritos/{id}/productos/{productoId} - Debe modificar cantidad")
     void modificarCantidad_DatosValidos_Retorna200() {
         UUID clienteId = UUID.randomUUID();
         ResponseEntity<Carrito> createResponse = restTemplate.postForEntity(
@@ -209,7 +209,7 @@ class CarritoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/carritos/{id}/productos/{productoId} - Debe eliminar producto")
+    @DisplayName("DELETE /api/v1/carritos/{id}/productos/{productoId} - Debe eliminar producto")
     void eliminarProducto_ProductoExistente_Retorna200() {
         UUID clienteId = UUID.randomUUID();
         ResponseEntity<Carrito> createResponse = restTemplate.postForEntity(
@@ -232,7 +232,7 @@ class CarritoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/carritos/{id}/vaciar - Debe vaciar el carrito")
+    @DisplayName("DELETE /api/v1/carritos/{id}/vaciar - Debe vaciar el carrito")
     void vaciarCarrito_ConItems_Retorna200() {
         UUID clienteId = UUID.randomUUID();
         ResponseEntity<Carrito> createResponse = restTemplate.postForEntity(
@@ -255,7 +255,7 @@ class CarritoControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/carritos/{id}/checkout/iniciar - Debe iniciar checkout")
+    @DisplayName("POST /api/v1/carritos/{id}/checkout/iniciar - Debe iniciar checkout")
     void iniciarCheckout_CarritoConItems_Retorna200() {
         UUID clienteId = UUID.randomUUID();
         ResponseEntity<Carrito> createResponse = restTemplate.postForEntity(

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/ordenes")
+@RequestMapping("/api/v1/ordenes")
 @Tag(name = "Órdenes", description = "Operaciones para gestión de órdenes de compra")
 public class OrdenController {
 

@@ -2,7 +2,7 @@ package com.example.demo.catalogo.dto;
 
 import com.example.demo.catalogo.domain.Imagen;
 import com.example.demo.catalogo.domain.Producto;
-import com.example.demo.catalogo.domain.ProductoId;
+import com.example.demo.shared.domain.ProductoId;
 import com.example.demo.catalogo.domain.CategoriaId;
 import com.example.demo.shared.domain.Money;
 import java.time.LocalDateTime;

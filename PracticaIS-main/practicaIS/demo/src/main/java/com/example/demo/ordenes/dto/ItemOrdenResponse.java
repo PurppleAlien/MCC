@@ -1,6 +1,6 @@
 package com.example.demo.ordenes.dto;
 
-import com.example.demo.catalogo.domain.ProductoId;
+import com.example.demo.shared.domain.ProductoId;
 import com.example.demo.ordenes.domain.ItemOrden;
 import com.example.demo.ordenes.domain.ItemOrdenId;
 import com.example.demo.shared.domain.Money;

@@ -1,6 +1,6 @@
 package com.example.demo.ventas.controller;
 
-import com.example.demo.catalogo.domain.ProductoId;
+import com.example.demo.shared.domain.ProductoId; // <-- IMPORTACIÓN AGREGADA
 import com.example.demo.shared.domain.ClienteId;
 import com.example.demo.ventas.domain.Carrito;
 import com.example.demo.ventas.domain.CarritoId;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/carritos")
+@RequestMapping("/api/v1/carritos")
 @Tag(name = "Carrito", description = "Operaciones para gestión del carrito de compras")
 public class CarritoController {
 

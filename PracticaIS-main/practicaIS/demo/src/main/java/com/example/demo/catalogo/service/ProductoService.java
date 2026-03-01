@@ -4,8 +4,9 @@ import com.example.demo.catalogo.domain.*;
 import com.example.demo.catalogo.dto.*;
 import com.example.demo.catalogo.repository.CategoriaJpaRepository;
 import com.example.demo.catalogo.repository.ProductoJpaRepository;
-import com.example.demo.shared.exception.RecursoNoEncontradoException;
 import com.example.demo.shared.domain.Money;
+import com.example.demo.shared.domain.ProductoId; // <-- IMPORT AGREGADO
+import com.example.demo.shared.exception.RecursoNoEncontradoException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +37,7 @@ public class ProductoService {
                 request.getDescripcion(),
                 precio,
                 request.getStock(),
-                request.getSku(),  // Usamos el SKU enviado en la petición
+                request.getSku(),
                 categoriaId
         );
         producto = productoRepository.save(producto);
@@ -62,26 +63,21 @@ public class ProductoService {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Producto", id.getValue()));
 
-        // Actualizar campos básicos
         producto.actualizarNombreDescripcion(request.getNombre(), request.getDescripcion());
 
-        // Actualizar precio si viene
         if (request.getPrecio() != null) {
             Money nuevoPrecio = new Money(request.getPrecio(), request.getMoneda() != null ? request.getMoneda() : "MXN");
             producto.CambiarPrecio(nuevoPrecio);
         }
 
-        // Actualizar stock si viene
         if (request.getStock() != null) {
             producto.setStock(request.getStock());
         }
 
-        // Actualizar SKU si viene (opcional, pero recomendado)
         if (request.getSku() != null) {
             producto.setSku(request.getSku());
         }
 
-        // Actualizar categoría si viene y es diferente
         if (request.getCategoriaId() != null) {
             CategoriaId nuevaCategoriaId = new CategoriaId(request.getCategoriaId());
             if (!nuevaCategoriaId.equals(producto.getCategoriaId())) {

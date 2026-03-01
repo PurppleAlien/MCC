@@ -1,11 +1,14 @@
 package com.example.demo.catalogo.domain;
 
+
 import com.example.demo.shared.domain.Money;
+import com.example.demo.shared.domain.ProductoId; // <-- IMPORTACIÓN AGREGADA
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.math.BigDecimal;
+
 
 @Entity
 public class Producto {

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/categorias")
+@RequestMapping("/api/v1/categorias")
 @Tag(name = "Categorías", description = "Operaciones para gestión de categorías")
 public class CategoriaController {
 

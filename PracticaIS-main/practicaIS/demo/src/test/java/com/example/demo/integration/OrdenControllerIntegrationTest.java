@@ -3,7 +3,7 @@ package com.example.demo.integration;
 import com.example.demo.catalogo.domain.Categoria;
 import com.example.demo.catalogo.domain.CategoriaId;
 import com.example.demo.catalogo.domain.Producto;
-import com.example.demo.catalogo.domain.ProductoId;
+import com.example.demo.shared.domain.ProductoId; // <-- IMPORTACIÓN AGREGADA
 import com.example.demo.catalogo.repository.CategoriaJpaRepository;
 import com.example.demo.catalogo.repository.ProductoJpaRepository;
 import com.example.demo.dto.ApiError;
@@ -41,8 +41,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class OrdenControllerIntegrationTest {
 
-    private static final String BASE_URL = "/api/ordenes";
-    private static final String CARRO_URL = "/api/carritos";
+    private static final String BASE_URL = "/api/v1/ordenes";
+    private static final String CARRO_URL = "/api/v1/carritos";
 
     @LocalServerPort
     private int port;
@@ -114,7 +114,7 @@ class OrdenControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/ordenes - Debe crear orden con datos válidos")
+    @DisplayName("POST /api/v1/ordenes - Debe crear orden con datos válidos")
     void crearOrden_DatosValidos_Retorna201() {
         ItemOrdenRequest itemRequest = new ItemOrdenRequest();
         itemRequest.setProductoId(new ProductoId(productoId));
@@ -151,7 +151,7 @@ class OrdenControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/ordenes/desde-carrito/{carritoId} - Debe crear orden desde carrito")
+    @DisplayName("POST /api/v1/ordenes/desde-carrito/{carritoId} - Debe crear orden desde carrito")
     void crearOrdenDesdeCarrito_CarritoValido_Retorna201() {
         // Agregar producto al carrito
         AgregarProductoRequest addRequest = new AgregarProductoRequest();
@@ -186,7 +186,7 @@ class OrdenControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/ordenes/{id} - Debe retornar orden existente")
+    @DisplayName("GET /api/v1/ordenes/{id} - Debe retornar orden existente")
     void obtenerOrden_Existente_Retorna200() {
         OrdenRequest request = crearOrdenRequestValida();
         ResponseEntity<OrdenResponse> createResponse = restTemplate.postForEntity(
@@ -203,7 +203,7 @@ class OrdenControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/ordenes/{id} - Debe retornar 404 si orden no existe")
+    @DisplayName("GET /api/v1/ordenes/{id} - Debe retornar 404 si orden no existe")
     void obtenerOrden_NoExistente_Retorna404() {
         UUID idInexistente = UUID.randomUUID();
         ResponseEntity<ApiError> response = restTemplate.getForEntity(
@@ -215,7 +215,7 @@ class OrdenControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/ordenes/{id}/confirmar - Debe confirmar orden")
+    @DisplayName("PATCH /api/v1/ordenes/{id}/confirmar - Debe confirmar orden")
     void confirmarOrden_OrdenPendiente_Retorna200() {
         OrdenRequest request = crearOrdenRequestValida();
         ResponseEntity<OrdenResponse> createResponse = restTemplate.postForEntity(

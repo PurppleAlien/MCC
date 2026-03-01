@@ -1,13 +1,13 @@
 package com.example.demo.ordenes.service;
 
 import com.example.demo.catalogo.domain.Producto;
-import com.example.demo.catalogo.domain.ProductoId;
 import com.example.demo.catalogo.repository.ProductoJpaRepository;
 import com.example.demo.ordenes.domain.*;
 import com.example.demo.ordenes.dto.*;
 import com.example.demo.ordenes.repository.OrdenJpaRepository;
 import com.example.demo.shared.domain.ClienteId;
 import com.example.demo.shared.domain.Money;
+import com.example.demo.shared.domain.ProductoId; // <-- IMPORTACIÓN AGREGADA
 import com.example.demo.shared.exception.RecursoNoEncontradoException;
 import com.example.demo.ventas.domain.CarritoId;
 import com.example.demo.ventas.service.CarritoService;

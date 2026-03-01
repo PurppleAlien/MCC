@@ -1,6 +1,6 @@
 package com.example.demo.catalogo.controller;
 
-import com.example.demo.catalogo.domain.ProductoId;
+import com.example.demo.shared.domain.ProductoId;
 import com.example.demo.catalogo.dto.ProductoRequest;
 import com.example.demo.catalogo.dto.ProductoResponse;
 import com.example.demo.catalogo.service.ProductoService;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/productos")
+@RequestMapping("/api/v1/productos")
 @Tag(name = "Productos", description = "Operaciones para gestión de productos")
 public class ProductoController {
 

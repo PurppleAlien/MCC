@@ -1,6 +1,6 @@
 package com.example.demo.ordenes.domain;
 
-import com.example.demo.catalogo.domain.ProductoId;
+import com.example.demo.shared.domain.ProductoId; // <-- IMPORTACIÓN AGREGADA
 import com.example.demo.shared.domain.ClienteId; // <-- IMPORTACIÓN AGREGADA
 import com.example.demo.shared.domain.Money;
 import org.junit.jupiter.api.DisplayName;

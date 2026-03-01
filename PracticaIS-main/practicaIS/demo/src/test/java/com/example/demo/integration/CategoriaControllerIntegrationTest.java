@@ -7,7 +7,6 @@ import com.example.demo.catalogo.dto.CategoriaResponse;
 import com.example.demo.catalogo.repository.CategoriaJpaRepository;
 import com.example.demo.dto.ApiError;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +17,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CategoriaControllerIntegrationTest {
 
-    private static final String BASE_URL = "/api/categorias";
+    private static final String BASE_URL = "/api/v1/categorias";
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -39,7 +36,7 @@ class CategoriaControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/categorias - Debe crear categoría con datos válidos")
+    @DisplayName("POST /api/v1/categorias - Debe crear categoría con datos válidos")
     void crearCategoria_DatosValidos_Retorna201() {
         CategoriaRequest request = new CategoriaRequest();
         request.setNombre("Electrónica");
@@ -56,7 +53,7 @@ class CategoriaControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/categorias - Debe retornar 400 con nombre vacío")
+    @DisplayName("POST /api/v1/categorias - Debe retornar 400 con nombre vacío")
     void crearCategoria_NombreVacio_Retorna400() {
         CategoriaRequest request = new CategoriaRequest();
         request.setNombre("");
