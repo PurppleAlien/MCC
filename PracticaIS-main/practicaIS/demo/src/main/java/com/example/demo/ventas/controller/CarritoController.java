@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/carritos")
+@RequestMapping("/api/v1/carritos")
 @Tag(name = "Carrito", description = "Operaciones para gestión del carrito de compras")
 public class CarritoController {
 
