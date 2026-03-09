@@ -5,7 +5,6 @@ import com.example.demo.catalogo.api.ProductoResumen;
 import com.example.demo.shared.domain.ClienteId;
 import com.example.demo.shared.domain.ProductoId;
 import com.example.demo.shared.event.ProductoAgregadoAlCarritoEvent;
-import com.example.demo.shared.event.ProductoCompradoEvent;
 import com.example.demo.shared.exception.RecursoNoEncontradoException;
 import com.example.demo.shared.exception.StockInsuficienteException;
 import com.example.demo.ventas.domain.*;
@@ -15,9 +14,7 @@ import com.example.demo.ventas.repository.CarritoRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Service
