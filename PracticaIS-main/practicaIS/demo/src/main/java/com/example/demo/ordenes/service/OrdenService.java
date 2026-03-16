@@ -7,14 +7,20 @@ import com.example.demo.ordenes.dto.*;
 import com.example.demo.ordenes.repository.OrdenJpaRepository;
 import com.example.demo.shared.domain.ClienteId;
 import com.example.demo.shared.domain.Money;
-import com.example.demo.shared.domain.ProductoId; // <-- IMPORTACIÓN AGREGADA
+import com.example.demo.shared.domain.ProductoId;
+import com.example.demo.shared.event.OrdenCreadaEvent;
+import com.example.demo.shared.event.ProductoCompradoEvent;
+import com.example.demo.shared.event.ProductoCompradoEvent.ItemComprado;
 import com.example.demo.shared.exception.RecursoNoEncontradoException;
 import com.example.demo.ventas.domain.CarritoId;
 import com.example.demo.ventas.service.CarritoService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,11 +29,14 @@ public class OrdenService {
     private final OrdenJpaRepository ordenRepository;
     private final CarritoService carritoService;
     private final ProductoJpaRepository productoRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public OrdenService(OrdenJpaRepository ordenRepository, CarritoService carritoService, ProductoJpaRepository productoRepository) {
+    public OrdenService(OrdenJpaRepository ordenRepository, CarritoService carritoService,
+                        ProductoJpaRepository productoRepository, ApplicationEventPublisher eventPublisher) {
         this.ordenRepository = ordenRepository;
         this.carritoService = carritoService;
         this.productoRepository = productoRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -52,6 +61,26 @@ public class OrdenService {
                 request.getDescuento() != null ? request.getDescuento() : Money.pesos(0)
         );
         orden = ordenRepository.save(orden);
+
+        // Publicar evento ProductoComprado
+        List<ItemComprado> itemsComprados = orden.getItems().stream()
+                .map(item -> new ItemComprado(
+                        item.getProductoId().getValue(),
+                        item.getSku(),
+                        item.getCantidad(),
+                        item.getPrecioUnitario().getCantidad(),
+                        item.getPrecioUnitario().getMoneda()
+                ))
+                .toList();
+
+        eventPublisher.publishEvent(new ProductoCompradoEvent(
+                UUID.randomUUID(),
+                Instant.now(),
+                orden.getId().getValue(),
+                orden.getClienteId().getValue(),
+                itemsComprados
+        ));
+
         return OrdenResponse.fromOrden(orden);
     }
 
@@ -82,10 +111,40 @@ public class OrdenService {
                 Money.pesos(0)
         );
         orden = ordenRepository.save(orden);
-        carritoService.completarCheckout(carritoId);
+
+        // Publicar ProductoCompradoEvent
+        List<ItemComprado> itemsComprados = orden.getItems().stream()
+                .map(item -> new ItemComprado(
+                        item.getProductoId().getValue(),
+                        item.getSku(),
+                        item.getCantidad(),
+                        item.getPrecioUnitario().getCantidad(),
+                        item.getPrecioUnitario().getMoneda()
+                ))
+                .toList();
+
+        eventPublisher.publishEvent(new ProductoCompradoEvent(
+                UUID.randomUUID(),
+                Instant.now(),
+                orden.getId().getValue(),
+                orden.getClienteId().getValue(),
+                itemsComprados
+        ));
+
+        // Publicar OrdenCreadaEvent
+        eventPublisher.publishEvent(new OrdenCreadaEvent(
+                UUID.randomUUID(),
+                Instant.now(),
+                orden.getId().getValue(),
+                carritoId.getValor(),
+                orden.getClienteId().getValue()
+        ));
+
+        // Ya no llamamos a completarCheckout aquí
         return OrdenResponse.fromOrden(orden);
     }
 
+    // El resto de métodos se mantienen igual...
     @Transactional(readOnly = true)
     public OrdenResponse buscarPorId(OrdenId id) {
         Orden orden = ordenRepository.findById(id)

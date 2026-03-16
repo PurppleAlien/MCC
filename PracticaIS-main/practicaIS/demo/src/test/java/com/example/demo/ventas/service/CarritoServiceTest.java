@@ -2,7 +2,6 @@ package com.example.demo.ventas.service;
 
 import com.example.demo.catalogo.api.CatalogoApi;
 import com.example.demo.catalogo.api.ProductoResumen;
-import com.example.demo.catalogo.domain.CategoriaId;
 import com.example.demo.shared.domain.ClienteId;
 import com.example.demo.shared.domain.Money;
 import com.example.demo.shared.domain.ProductoId;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -34,6 +34,9 @@ class CarritoServiceTest {
     @Mock
     private CatalogoApi catalogoApi;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private CarritoService carritoService;
 
@@ -42,17 +45,18 @@ class CarritoServiceTest {
     private ClienteId clienteId;
     private ProductoResumen productoResumen;
     private Carrito carrito;
+    private Money precio;
 
     @BeforeEach
     void setUp() {
         carritoId = CarritoId.generar();
         productoId = ProductoId.generar();
         clienteId = new ClienteId(UUID.randomUUID());
-        // Creamos un ProductoResumen con los mismos datos que tendría un producto real
+        precio = Money.pesos(100);
         productoResumen = new ProductoResumen(
                 productoId,
                 "Producto Test",
-                Money.pesos(100),
+                precio,
                 10,
                 "ABC-123"
         );
@@ -117,7 +121,8 @@ class CarritoServiceTest {
         ItemCarrito item = resultado.getItems().get(0);
         assertEquals(productoId, item.getProductoId());
         assertEquals(cantidad, item.getCantidad());
-        assertEquals(productoResumen.precio(), item.getPrecioUnitario());
+        assertEquals(precio, item.getPrecioUnitario());
+        verify(eventPublisher).publishEvent(any(com.example.demo.shared.event.ProductoAgregadoAlCarritoEvent.class));
         verify(carritoRepository).save(carrito);
     }
 
@@ -125,33 +130,34 @@ class CarritoServiceTest {
     @DisplayName("agregarProducto debe lanzar excepción si producto no existe")
     void agregarProducto_productoNoExistente_lanzaExcepcion() {
         when(carritoRepository.findById(carritoId)).thenReturn(Optional.of(carrito));
-        when(catalogoApi.obtenerProducto(productoId))
-                .thenThrow(new RecursoNoEncontradoException("Producto", productoId.getValue()));
+        when(catalogoApi.obtenerProducto(productoId)).thenThrow(new RecursoNoEncontradoException("Producto", productoId.getValue()));
 
         assertThrows(RecursoNoEncontradoException.class,
                 () -> carritoService.agregarProducto(carritoId, productoId, 1));
 
         verify(carritoRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
     @DisplayName("agregarProducto debe lanzar excepción si stock insuficiente")
     void agregarProducto_stockInsuficiente_lanzaExcepcion() {
         int cantidad = 20; // mayor al stock (10)
+
         when(carritoRepository.findById(carritoId)).thenReturn(Optional.of(carrito));
-        when(catalogoApi.obtenerProducto(productoId)).thenReturn(productoResumen); // stock 10
+        when(catalogoApi.obtenerProducto(productoId)).thenReturn(productoResumen);
 
         assertThrows(StockInsuficienteException.class,
                 () -> carritoService.agregarProducto(carritoId, productoId, cantidad));
 
         verify(carritoRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
     @DisplayName("modificarCantidad debe actualizar cantidad del item")
     void modificarCantidad_correcto() {
-        // Primero agregamos un producto manualmente al carrito
-        ProductoRef ref = new ProductoRef(productoId, productoResumen.precio());
+        ProductoRef ref = new ProductoRef(productoId, precio);
         carrito.agregarProducto(ref, 2);
 
         when(carritoRepository.findById(carritoId)).thenReturn(Optional.of(carrito));
@@ -179,7 +185,7 @@ class CarritoServiceTest {
     @Test
     @DisplayName("eliminarProducto debe remover item del carrito")
     void eliminarProducto_correcto() {
-        ProductoRef ref = new ProductoRef(productoId, productoResumen.precio());
+        ProductoRef ref = new ProductoRef(productoId, precio);
         carrito.agregarProducto(ref, 2);
         when(carritoRepository.findById(carritoId)).thenReturn(Optional.of(carrito));
         when(carritoRepository.save(any(Carrito.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -193,7 +199,7 @@ class CarritoServiceTest {
     @Test
     @DisplayName("vaciar debe remover todos los items del carrito")
     void vaciar_correcto() {
-        ProductoRef ref1 = new ProductoRef(productoId, productoResumen.precio());
+        ProductoRef ref1 = new ProductoRef(productoId, precio);
         ProductoRef ref2 = new ProductoRef(ProductoId.generar(), Money.pesos(50));
         carrito.agregarProducto(ref1, 2);
         carrito.agregarProducto(ref2, 1);
@@ -209,7 +215,7 @@ class CarritoServiceTest {
     @Test
     @DisplayName("iniciarCheckout cambia estado a EN_CHECKOUT")
     void iniciarCheckout_correcto() {
-        ProductoRef ref = new ProductoRef(productoId, productoResumen.precio());
+        ProductoRef ref = new ProductoRef(productoId, precio);
         carrito.agregarProducto(ref, 1);
         when(carritoRepository.findById(carritoId)).thenReturn(Optional.of(carrito));
         when(carritoRepository.save(any(Carrito.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -223,9 +229,9 @@ class CarritoServiceTest {
     @Test
     @DisplayName("completarCheckout cambia estado a COMPLETADO")
     void completarCheckout_correcto() {
-        ProductoRef ref = new ProductoRef(productoId, productoResumen.precio());
+        ProductoRef ref = new ProductoRef(productoId, precio);
         carrito.agregarProducto(ref, 1);
-        carrito.iniciarCheckout(); // necesario para poder completar
+        carrito.iniciarCheckout();
         when(carritoRepository.findById(carritoId)).thenReturn(Optional.of(carrito));
         when(carritoRepository.save(any(Carrito.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -238,7 +244,7 @@ class CarritoServiceTest {
     @Test
     @DisplayName("abandonar cambia estado a ABANDONADO")
     void abandonar_correcto() {
-        ProductoRef ref = new ProductoRef(productoId, productoResumen.precio());
+        ProductoRef ref = new ProductoRef(productoId, precio);
         carrito.agregarProducto(ref, 1);
         carrito.iniciarCheckout();
         when(carritoRepository.findById(carritoId)).thenReturn(Optional.of(carrito));

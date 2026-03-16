@@ -3,7 +3,6 @@ package com.example.demo.integration;
 import com.example.demo.catalogo.domain.Categoria;
 import com.example.demo.catalogo.domain.CategoriaId;
 import com.example.demo.catalogo.domain.Producto;
-import com.example.demo.shared.domain.ProductoId; // <-- IMPORTACIÓN AGREGADA
 import com.example.demo.catalogo.repository.CategoriaJpaRepository;
 import com.example.demo.catalogo.repository.ProductoJpaRepository;
 import com.example.demo.dto.ApiError;
@@ -14,10 +13,12 @@ import com.example.demo.ordenes.dto.OrdenResponse;
 import com.example.demo.ordenes.repository.OrdenJpaRepository;
 import com.example.demo.shared.domain.ClienteId;
 import com.example.demo.shared.domain.Money;
+import com.example.demo.shared.domain.ProductoId;
 import com.example.demo.ventas.domain.Carrito;
 import com.example.demo.ventas.domain.CarritoId;
 import com.example.demo.ventas.dto.AgregarProductoRequest;
 import com.example.demo.ventas.repository.CarritoRepository;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,8 +34,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import org.awaitility.Awaitility;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -183,6 +187,14 @@ class OrdenControllerIntegrationTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().getItems().size());
+
+        // Esperar a que el carrito se marque como completado (asíncrono)
+        Awaitility.await().atMost(Duration.ofSeconds(5)).until(() -> {
+            ResponseEntity<Carrito> carritoResponse = restTemplate.getForEntity(
+                    carroUrl() + "/" + carritoId, Carrito.class);
+            return carritoResponse.getBody() != null && 
+                   "COMPLETADO".equals(carritoResponse.getBody().getEstado().name());
+        });
     }
 
     @Test

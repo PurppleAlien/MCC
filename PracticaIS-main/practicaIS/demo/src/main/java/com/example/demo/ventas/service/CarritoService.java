@@ -4,22 +4,29 @@ import com.example.demo.catalogo.api.CatalogoApi;
 import com.example.demo.catalogo.api.ProductoResumen;
 import com.example.demo.shared.domain.ClienteId;
 import com.example.demo.shared.domain.ProductoId;
+import com.example.demo.shared.event.ProductoAgregadoAlCarritoEvent;
 import com.example.demo.shared.exception.RecursoNoEncontradoException;
 import com.example.demo.shared.exception.StockInsuficienteException;
 import com.example.demo.ventas.domain.*;
 import com.example.demo.ventas.repository.CarritoRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class CarritoService {
 
     private final CarritoRepository carritoRepository;
     private final CatalogoApi catalogoApi;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public CarritoService(CarritoRepository carritoRepository, CatalogoApi catalogoApi) {
+    public CarritoService(CarritoRepository carritoRepository, CatalogoApi catalogoApi, ApplicationEventPublisher eventPublisher) {
         this.carritoRepository = carritoRepository;
         this.catalogoApi = catalogoApi;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -48,7 +55,20 @@ public class CarritoService {
 
         ProductoRef productoRef = new ProductoRef(productoId, producto.precio());
         carrito.agregarProducto(productoRef, cantidad);
-        return carritoRepository.save(carrito);
+        carrito = carritoRepository.save(carrito);
+
+        // Publicar evento
+        eventPublisher.publishEvent(new ProductoAgregadoAlCarritoEvent(
+                UUID.randomUUID(),
+                Instant.now(),
+                productoId.getValue(),
+                carritoId.getValor(),
+                cantidad,
+                producto.precio().getCantidad(),
+                producto.precio().getMoneda()
+        ));
+
+        return carrito;
     }
 
     @Transactional

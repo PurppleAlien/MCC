@@ -1,8 +1,10 @@
 package com.example.demo.catalogo.controller;
 
 import com.example.demo.shared.domain.ProductoId;
+import com.example.demo.catalogo.dto.ProductoEstadisticasResponse;
 import com.example.demo.catalogo.dto.ProductoRequest;
 import com.example.demo.catalogo.dto.ProductoResponse;
+import com.example.demo.catalogo.service.ProductoEstadisticasService;
 import com.example.demo.catalogo.service.ProductoService;
 import com.example.demo.dto.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,9 +28,11 @@ import java.util.UUID;
 public class ProductoController {
 
     private final ProductoService productoService;
+    private final ProductoEstadisticasService estadisticasService;
 
-    public ProductoController(ProductoService productoService) {
+    public ProductoController(ProductoService productoService, ProductoEstadisticasService estadisticasService) {
         this.productoService = productoService;
+        this.estadisticasService = estadisticasService;
     }
 
     @PostMapping
@@ -114,5 +118,34 @@ public class ProductoController {
             @Parameter(description = "ID del producto", required = true) @PathVariable UUID id) {
         ProductoResponse response = productoService.desactivarProducto(new ProductoId(id));
         return ResponseEntity.ok(response);
+    }
+
+    // Nuevos endpoints para estadísticas
+    @GetMapping("/mas-vendidos")
+    @Operation(summary = "Obtener productos más vendidos", description = "Lista de productos ordenados por ventas")
+    public ResponseEntity<List<ProductoEstadisticasResponse>> getMasVendidos(
+            @RequestParam(defaultValue = "10") int limit) {
+        List<ProductoEstadisticasResponse> response = estadisticasService.obtenerMasVendidos(limit)
+                .stream()
+                .map(ProductoEstadisticasResponse::fromEntity)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/estadisticas")
+    @Operation(summary = "Obtener estadísticas de un producto", description = "Retorna las estadísticas de ventas y agregados al carrito")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Estadísticas encontradas",
+                    content = @Content(schema = @Schema(implementation = ProductoEstadisticasResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Producto no encontrado o sin estadísticas",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    public ResponseEntity<ProductoEstadisticasResponse> getEstadisticas(
+            @Parameter(description = "ID del producto", required = true) @PathVariable UUID id) {
+        var stats = estadisticasService.obtenerEstadisticas(id);
+        if (stats == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(ProductoEstadisticasResponse.fromEntity(stats));
     }
 }
