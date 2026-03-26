@@ -2,6 +2,7 @@ package com.example.demo.ventas.service;
 
 import com.example.demo.catalogo.api.CatalogoApi;
 import com.example.demo.catalogo.api.ProductoResumen;
+import com.example.demo.config.RabbitConfig; // <-- IMPORTACIÓN NUEVA
 import com.example.demo.shared.domain.ClienteId;
 import com.example.demo.shared.domain.ProductoId;
 import com.example.demo.shared.event.ProductoAgregadoAlCarritoEvent;
@@ -9,6 +10,7 @@ import com.example.demo.shared.exception.RecursoNoEncontradoException;
 import com.example.demo.shared.exception.StockInsuficienteException;
 import com.example.demo.ventas.domain.*;
 import com.example.demo.ventas.repository.CarritoRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate; // <-- IMPORTACIÓN NUEVA
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +24,14 @@ public class CarritoService {
     private final CarritoRepository carritoRepository;
     private final CatalogoApi catalogoApi;
     private final ApplicationEventPublisher eventPublisher;
+    private final RabbitTemplate rabbitTemplate; // <-- NUEVO CAMPO
 
-    public CarritoService(CarritoRepository carritoRepository, CatalogoApi catalogoApi, ApplicationEventPublisher eventPublisher) {
+    public CarritoService(CarritoRepository carritoRepository, CatalogoApi catalogoApi,
+                          ApplicationEventPublisher eventPublisher, RabbitTemplate rabbitTemplate) {
         this.carritoRepository = carritoRepository;
         this.catalogoApi = catalogoApi;
         this.eventPublisher = eventPublisher;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Transactional
@@ -57,8 +62,8 @@ public class CarritoService {
         carrito.agregarProducto(productoRef, cantidad);
         carrito = carritoRepository.save(carrito);
 
-        // Publicar evento
-        eventPublisher.publishEvent(new ProductoAgregadoAlCarritoEvent(
+        // Publicar evento interno
+        ProductoAgregadoAlCarritoEvent event = new ProductoAgregadoAlCarritoEvent(
                 UUID.randomUUID(),
                 Instant.now(),
                 productoId.getValue(),
@@ -66,7 +71,15 @@ public class CarritoService {
                 cantidad,
                 producto.precio().getCantidad(),
                 producto.precio().getMoneda()
-        ));
+        );
+        eventPublisher.publishEvent(event);
+
+        // Publicar evento a RabbitMQ
+        rabbitTemplate.convertAndSend(
+                RabbitConfig.EVENTS_EXCHANGE,
+                RabbitConfig.RK_PRODUCTO_AGREGADO,
+                event
+        );
 
         return carrito;
     }

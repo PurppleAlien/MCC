@@ -1,7 +1,14 @@
 package com.example.demo.ordenes.service;
 
-import com.example.demo.catalogo.domain.Producto;
-import com.example.demo.catalogo.repository.ProductoJpaRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import com.example.demo.config.RabbitConfig;
+import com.example.demo.shared.event.ProductoCompradoEvent;
+import java.time.Instant;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import com.example.demo.catalogo.api.CatalogoApi;
+import com.example.demo.catalogo.api.ProductoResumen;
 import com.example.demo.ordenes.domain.*;
 import com.example.demo.ordenes.dto.*;
 import com.example.demo.ordenes.repository.OrdenJpaRepository;
@@ -18,25 +25,27 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class OrdenService {
 
     private final OrdenJpaRepository ordenRepository;
     private final CarritoService carritoService;
-    private final ProductoJpaRepository productoRepository;
+    private final CatalogoApi catalogoApi;
     private final ApplicationEventPublisher eventPublisher;
+    private final RabbitTemplate rabbitTemplate;
 
-    public OrdenService(OrdenJpaRepository ordenRepository, CarritoService carritoService,
-                        ProductoJpaRepository productoRepository, ApplicationEventPublisher eventPublisher) {
+    public OrdenService(OrdenJpaRepository ordenRepository,
+                        CarritoService carritoService,
+                        CatalogoApi catalogoApi,
+                        ApplicationEventPublisher eventPublisher,
+                        RabbitTemplate rabbitTemplate) {
         this.ordenRepository = ordenRepository;
         this.carritoService = carritoService;
-        this.productoRepository = productoRepository;
+        this.catalogoApi = catalogoApi;
         this.eventPublisher = eventPublisher;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Transactional
@@ -62,24 +71,8 @@ public class OrdenService {
         );
         orden = ordenRepository.save(orden);
 
-        // Publicar evento ProductoComprado
-        List<ItemComprado> itemsComprados = orden.getItems().stream()
-                .map(item -> new ItemComprado(
-                        item.getProductoId().getValue(),
-                        item.getSku(),
-                        item.getCantidad(),
-                        item.getPrecioUnitario().getCantidad(),
-                        item.getPrecioUnitario().getMoneda()
-                ))
-                .toList();
-
-        eventPublisher.publishEvent(new ProductoCompradoEvent(
-                UUID.randomUUID(),
-                Instant.now(),
-                orden.getId().getValue(),
-                orden.getClienteId().getValue(),
-                itemsComprados
-        ));
+        // *** NO publicar evento aquí, se publicará cuando se procese el pago ***
+        // rabbitTemplate.convertAndSend(...);  // Comentado
 
         return OrdenResponse.fromOrden(orden);
     }
@@ -89,15 +82,14 @@ public class OrdenService {
         var carrito = carritoService.obtenerCarrito(carritoId);
         List<ItemOrden> items = carrito.getItems().stream()
                 .map(itemCarrito -> {
-                    Producto producto = productoRepository.findById(itemCarrito.getProductoId())
-                            .orElseThrow(() -> new RecursoNoEncontradoException("Producto", itemCarrito.getProductoId().getValue()));
+                    ProductoResumen producto = catalogoApi.obtenerProducto(itemCarrito.getProductoId());
                     return new ItemOrden(
                             ItemOrdenId.generar(),
                             itemCarrito.getProductoId(),
-                            producto.getNombre(),
-                            producto.getSku(),
+                            producto.nombre(),
+                            producto.sku(),
                             itemCarrito.getCantidad(),
-                            itemCarrito.getPrecioUnitario()
+                            producto.precio()
                     );
                 })
                 .collect(Collectors.toList());
@@ -112,39 +104,27 @@ public class OrdenService {
         );
         orden = ordenRepository.save(orden);
 
-        // Publicar ProductoCompradoEvent
-        List<ItemComprado> itemsComprados = orden.getItems().stream()
-                .map(item -> new ItemComprado(
-                        item.getProductoId().getValue(),
-                        item.getSku(),
-                        item.getCantidad(),
-                        item.getPrecioUnitario().getCantidad(),
-                        item.getPrecioUnitario().getMoneda()
-                ))
-                .toList();
+        // *** NO publicar evento aquí, se publicará cuando se procese el pago ***
+        // rabbitTemplate.convertAndSend(...);  // Comentado
 
-        eventPublisher.publishEvent(new ProductoCompradoEvent(
-                UUID.randomUUID(),
-                Instant.now(),
-                orden.getId().getValue(),
-                orden.getClienteId().getValue(),
-                itemsComprados
-        ));
-
-        // Publicar OrdenCreadaEvent
-        eventPublisher.publishEvent(new OrdenCreadaEvent(
+        // Publicar solo el evento de orden creada (si es necesario)
+        OrdenCreadaEvent ordenEvent = new OrdenCreadaEvent(
                 UUID.randomUUID(),
                 Instant.now(),
                 orden.getId().getValue(),
                 carritoId.getValor(),
                 orden.getClienteId().getValue()
-        ));
+        );
+        eventPublisher.publishEvent(ordenEvent);
+        rabbitTemplate.convertAndSend(
+                RabbitConfig.EVENTS_EXCHANGE,
+                "orden.creada",
+                ordenEvent
+        );
 
-        // Ya no llamamos a completarCheckout aquí
         return OrdenResponse.fromOrden(orden);
     }
 
-    // El resto de métodos se mantienen igual...
     @Transactional(readOnly = true)
     public OrdenResponse buscarPorId(OrdenId id) {
         Orden orden = ordenRepository.findById(id)
@@ -174,6 +154,36 @@ public class OrdenService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Orden", id.getValue()));
         orden.procesarPago("TARJETA", referenciaPago, "sistema");
         orden = ordenRepository.save(orden);
+
+        // --- Publicar evento ProductoCompradoEvent después de procesar el pago ---
+        List<ItemComprado> itemsComprados = orden.getItems().stream()
+                .map(item -> new ItemComprado(
+                        item.getProductoId().getValue(),
+                        item.getSku(),
+                        item.getCantidad(),
+                        item.getPrecioUnitario().getCantidad(),
+                        item.getPrecioUnitario().getMoneda()
+                ))
+                .collect(Collectors.toList());
+
+        ProductoCompradoEvent evento = new ProductoCompradoEvent(
+                UUID.randomUUID(),
+                Instant.now(),
+                orden.getId().getValue(),
+                orden.getClienteId().getValue(),
+                itemsComprados
+        );
+
+        // Publicar mediante RabbitMQ
+        rabbitTemplate.convertAndSend(
+                RabbitConfig.EVENTS_EXCHANGE,
+                RabbitConfig.RK_PRODUCTO_COMPRADO,
+                evento
+        );
+
+        // Opcional: publicar también como evento de aplicación (si hay listeners locales)
+        eventPublisher.publishEvent(evento);
+
         return OrdenResponse.fromOrden(orden);
     }
 

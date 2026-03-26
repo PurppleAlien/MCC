@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: uamishop-ventas
+  datasource:
+    url: jdbc:mysql://mysql:3306/uamishop?useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+
+server:
+  port: 8083
+
+catalogo:
+  api:
+    url: http://uamishop-catalogo:8081
