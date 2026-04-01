@@ -2,7 +2,6 @@ package com.example.demo.ordenes.service;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import com.example.demo.config.RabbitConfig;
-import com.example.demo.shared.event.ProductoCompradoEvent;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Collectors;

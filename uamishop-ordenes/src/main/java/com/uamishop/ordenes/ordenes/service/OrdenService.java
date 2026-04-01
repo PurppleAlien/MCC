@@ -4,8 +4,8 @@ import com.uamishop.ordenes.config.RabbitConfig;
 import com.uamishop.ordenes.ordenes.domain.*;
 import com.uamishop.ordenes.ordenes.dto.*;
 import com.uamishop.ordenes.ordenes.repository.OrdenJpaRepository;
-import com.uamishop.ordenes.shared.domain.ClienteId;
 import com.uamishop.ordenes.shared.domain.Money;
+import com.uamishop.ordenes.shared.event.OrdenCreadaEvent;
 import com.uamishop.ordenes.shared.event.ProductoCompradoEvent;
 import com.uamishop.ordenes.shared.event.ProductoCompradoEvent.ItemComprado;
 import com.uamishop.ordenes.shared.exception.RecursoNoEncontradoException;
@@ -56,28 +56,18 @@ public class OrdenService {
 
         orden = ordenRepository.save(orden);
 
-        List<ItemComprado> itemsComprados = orden.getItems().stream()
-                .map(item -> new ItemComprado(
-                        item.getProductoId().getValue(),
-                        item.getSku(),
-                        item.getCantidad(),
-                        item.getPrecioUnitario().getCantidad(),
-                        item.getPrecioUnitario().getMoneda()
-                ))
-                .toList();
-
-        ProductoCompradoEvent event = new ProductoCompradoEvent(
+        // Publicar evento orden.creada para que Ventas complete el checkout
+        OrdenCreadaEvent ordenCreadaEvent = new OrdenCreadaEvent(
                 UUID.randomUUID(),
                 Instant.now(),
                 orden.getId().getValue(),
-                orden.getClienteId().getValue(),
-                itemsComprados
+                request.getCarritoId(),
+                orden.getClienteId().getValue()
         );
-
         rabbitTemplate.convertAndSend(
                 RabbitConfig.EVENTS_EXCHANGE,
-                RabbitConfig.RK_PRODUCTO_COMPRADO,
-                event
+                "orden.creada",
+                ordenCreadaEvent
         );
 
         return OrdenResponse.fromOrden(orden);
@@ -110,7 +100,34 @@ public class OrdenService {
         Orden orden = ordenRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Orden", id.getValue()));
         orden.procesarPago("TARJETA", referenciaPago, "sistema");
-        return OrdenResponse.fromOrden(ordenRepository.save(orden));
+        orden = ordenRepository.save(orden);
+
+        // Publicar evento producto.comprado para que Catalogo reduzca stock
+        List<ItemComprado> itemsComprados = orden.getItems().stream()
+                .map(item -> new ItemComprado(
+                        item.getProductoId().getValue(),
+                        item.getSku(),
+                        item.getCantidad(),
+                        item.getPrecioUnitario().getCantidad(),
+                        item.getPrecioUnitario().getMoneda()
+                ))
+                .toList();
+
+        ProductoCompradoEvent event = new ProductoCompradoEvent(
+                UUID.randomUUID(),
+                Instant.now(),
+                orden.getId().getValue(),
+                orden.getClienteId().getValue(),
+                itemsComprados
+        );
+
+        rabbitTemplate.convertAndSend(
+                RabbitConfig.EVENTS_EXCHANGE,
+                RabbitConfig.RK_PRODUCTO_COMPRADO,
+                event
+        );
+
+        return OrdenResponse.fromOrden(orden);
     }
 
     @Transactional

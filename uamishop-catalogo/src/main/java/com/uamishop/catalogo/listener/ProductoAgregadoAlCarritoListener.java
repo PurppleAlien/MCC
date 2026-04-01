@@ -1,9 +1,9 @@
 package com.uamishop.catalogo.listener;
 
+import com.uamishop.catalogo.config.RabbitConfig;
 import com.uamishop.catalogo.service.ProductoEstadisticasService;
 import com.uamishop.catalogo.shared.event.ProductoAgregadoAlCarritoEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,8 +17,7 @@ public class ProductoAgregadoAlCarritoListener {
         this.estadisticasService = estadisticasService;
     }
 
-    @EventListener
-    @Async
+    @RabbitListener(queues = RabbitConfig.QUEUE_CATALOGO_PRODUCTO_AGREGADO)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onProductoAgregadoAlCarrito(ProductoAgregadoAlCarritoEvent event) {
         estadisticasService.registrarAgregadoAlCarrito(event.productoId());

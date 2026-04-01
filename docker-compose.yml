@@ -2,23 +2,25 @@ name: uamishop-app
 
 services:
   mysql:
-    image: mysql:latest
+    image: mysql:8.0
     container_name: uamishop-mysql
     environment:
       MYSQL_DATABASE: uamishop
       MYSQL_USER: uamishop
       MYSQL_PASSWORD: uamishop
       MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: "%"
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
-      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-proot"]
+      interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 15s
+      retries: 15
+      start_period: 30s
     restart: unless-stopped
     networks:
       - uamishop-app
@@ -73,6 +75,28 @@ services:
       - "8081:8081"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/uamishop_catalogo?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: uamishop
+      SPRING_DATASOURCE_PASSWORD: uamishop
+      SPRING_RABBITMQ_HOST: rabbitmq
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - uamishop-app
+
+  uamishop-ordenes:
+    build:
+      context: ./uamishop-ordenes
+      dockerfile: Dockerfile
+    image: uamishop-ordenes:latest
+    container_name: uamishop-ordenes
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/uamishop?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: uamishop
       SPRING_DATASOURCE_PASSWORD: uamishop
       SPRING_RABBITMQ_HOST: rabbitmq

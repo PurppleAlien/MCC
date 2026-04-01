@@ -5,7 +5,6 @@ import com.uamishop.catalogo.service.ProductoEstadisticasService;
 import com.uamishop.catalogo.service.ProductoService;
 import com.uamishop.catalogo.shared.event.ProductoCompradoEvent;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +22,6 @@ public class ProductoCompradoListener {
     }
 
     @RabbitListener(queues = RabbitConfig.QUEUE_CATALOGO_PRODUCTO_COMPRADO)
-    @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onProductoComprado(ProductoCompradoEvent event) {
         event.items().forEach(item -> {

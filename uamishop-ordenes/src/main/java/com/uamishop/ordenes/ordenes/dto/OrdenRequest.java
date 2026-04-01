@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
+import java.util.UUID;
 
 public class OrdenRequest {
 
@@ -17,6 +18,8 @@ public class OrdenRequest {
 
     @NotNull(message = "El ID del cliente es obligatorio")
     private ClienteId clienteId;
+
+    private UUID carritoId; // opcional: ID del carrito origen para publicar evento orden.creada
 
     @Valid
     @NotNull(message = "La lista de items no puede ser nula")
@@ -67,5 +70,13 @@ public class OrdenRequest {
 
     public void setDescuento(Money descuento) {
         this.descuento = descuento;
+    }
+
+    public UUID getCarritoId() {
+        return carritoId;
+    }
+
+    public void setCarritoId(UUID carritoId) {
+        this.carritoId = carritoId;
     }
 }
