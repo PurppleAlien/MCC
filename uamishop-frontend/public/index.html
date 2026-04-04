@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f2d6e">
+  <title>UAMIShop — Tienda en Línea</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ══════════════ HEADER ══════════════ -->
+  <header>
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">🛒</div>
+        <span class="logo-text">UAMI<span class="logo-accent">Shop</span></span>
+      </div>
+
+      <nav>
+        <button class="nav-btn active" data-section="catalogo" onclick="showSection('catalogo')">
+          <span class="nav-icon">🏪</span> Catálogo
+        </button>
+        <button class="nav-btn" data-section="carrito" onclick="showSection('carrito')">
+          <span class="nav-icon">🛒</span> Carrito
+          <span id="carrito-badge" class="nav-badge hidden">0</span>
+        </button>
+        <button class="nav-btn" data-section="ordenes" onclick="showSection('ordenes')">
+          <span class="nav-icon">📦</span> Órdenes
+        </button>
+      </nav>
+
+      <div class="gateway-badge">⚡ :8090</div>
+    </div>
+  </header>
+
+  <!-- ══════════════ MAIN ══════════════ -->
+  <main>
+
+    <!-- ═══ CATÁLOGO ═══ -->
+    <section id="section-catalogo" class="section active">
+      <div class="section-header">
+        <div>
+          <h2>Catálogo de Productos</h2>
+          <p class="section-subtitle">Encuentra lo que buscas y agrégalo a tu carrito</p>
+        </div>
+        <div class="section-actions">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-input"
+              placeholder="Buscar por nombre o SKU..."
+              oninput="filtrarProductos()"
+              autocomplete="off">
+          </div>
+          <button class="btn-ghost" onclick="cargarProductos(true)" title="Recargar catálogo">
+            ↻ Actualizar
+          </button>
+          <button class="btn-primary" onclick="toggleCrearProducto()">
+            + Nuevo Producto
+          </button>
+        </div>
+      </div>
+
+      <!-- Formulario nuevo producto -->
+      <div id="form-crear-producto" class="form-panel hidden">
+        <div class="form-panel-header">
+          <h3>➕ Nuevo Producto</h3>
+          <button class="btn-icon" onclick="toggleCrearProducto()" title="Cerrar">✕</button>
+        </div>
+        <div class="form-grid-6">
+          <div class="field">
+            <label>Nombre <span class="req">*</span></label>
+            <input type="text" id="prod-nombre" placeholder="Ej: Laptop Gaming Pro" maxlength="100">
+          </div>
+          <div class="field">
+            <label>SKU <span class="req">*</span> <span class="hint">ABC-123</span></label>
+            <input type="text" id="prod-sku" placeholder="LAP-001" maxlength="7"
+              style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="field">
+            <label>Precio MXN <span class="req">*</span></label>
+            <input type="number" id="prod-precio" placeholder="15000.00" min="0.01" step="0.01">
+          </div>
+          <div class="field">
+            <label>Stock <span class="req">*</span></label>
+            <input type="number" id="prod-stock" placeholder="10" min="0" step="1">
+          </div>
+          <div class="field">
+            <label>Descripción</label>
+            <input type="text" id="prod-descripcion" placeholder="Descripción breve del producto" maxlength="500">
+          </div>
+          <div class="field">
+            <label>Categoría <span class="req">*</span></label>
+            <select id="prod-categoria">
+              <option value="">-- Seleccionar --</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-footer">
+          <small class="hint-text">
+            ⚠️ SKU: <strong>3 letras mayúsculas + guión + 3 números</strong> — Ej: LAP-001, CEL-042
+          </small>
+          <div class="form-btns">
+            <button class="btn-outline" onclick="toggleCrearProducto()">Cancelar</button>
+            <button class="btn-primary" id="btn-guardar-producto" onclick="crearProducto()">
+              💾 Guardar Producto
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cuadrícula de productos -->
+      <div id="productos-grid">
+        <div class="skeleton-grid">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ CARRITO ═══ -->
+    <section id="section-carrito" class="section">
+      <div class="section-header">
+        <div>
+          <h2>Mi Carrito</h2>
+          <p class="section-subtitle">Revisa tus productos y genera tu orden</p>
+        </div>
+      </div>
+
+      <div class="carrito-layout">
+        <div class="carrito-main">
+
+          <!-- Panel de cliente -->
+          <div class="cliente-panel">
+            <label class="field-label">🆔 ID de Cliente (UUID)</label>
+            <div class="input-row">
+              <input type="text" id="cliente-id"
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                value="a1b2c3d4-0000-0000-0000-000000000001"
+                autocomplete="off">
+              <button class="btn-primary" onclick="crearOCargarCarrito()">Cargar Carrito</button>
+            </div>
+            <small class="hint-text" style="margin-top:6px;display:block">
+              UUID pre-cargado listo para usar. Puedes modificarlo.
+            </small>
+          </div>
+
+          <!-- Carrito cargado -->
+          <div id="carrito-info" class="hidden">
+            <div class="carrito-status-bar">
+              <div>
+                <span class="label-sm">Carrito ID:</span>
+                <code id="carrito-id-display"></code>
+              </div>
+              <span class="badge" id="carrito-estado"></span>
+            </div>
+
+            <div id="carrito-items" class="carrito-items-list"></div>
+
+            <div class="carrito-footer">
+              <div class="total-display">
+                <span>Total a pagar</span>
+                <strong id="carrito-total">$0.00 MXN</strong>
+              </div>
+              <button class="btn-checkout" onclick="checkout()">
+                Crear Orden →
+              </button>
+            </div>
+          </div>
+
+          <!-- Estado vacío -->
+          <div id="carrito-empty" class="empty-panel">
+            <div class="empty-icon">🛒</div>
+            <p>Tu carrito está vacío</p>
+            <small>Haz clic en "Cargar Carrito" para comenzar</small>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ ÓRDENES ═══ -->
+    <section id="section-ordenes" class="section">
+      <div class="section-header">
+        <div>
+          <h2>Mis Órdenes</h2>
+          <p class="section-subtitle">Sigue el estado de tus compras en tiempo real</p>
+        </div>
+        <button class="btn-ghost" onclick="cargarOrdenes(true)">↻ Actualizar</button>
+      </div>
+
+      <div id="ordenes-list" class="ordenes-list">
+        <div class="empty-panel">
+          <div class="empty-icon">📦</div>
+          <p>Aún no hay órdenes</p>
+          <small>Presiona "Actualizar" o genera una orden desde el Carrito</small>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══════════════ BOTTOM NAV (mobile) ══════════════ -->
+  <nav class="mobile-nav">
+    <div class="mobile-nav-inner">
+      <button class="mobile-nav-btn active" data-section="catalogo" onclick="showSection('catalogo')">
+        <span class="mobile-nav-icon">🏪</span>
+        Catálogo
+      </button>
+      <button class="mobile-nav-btn" data-section="carrito" onclick="showSection('carrito')">
+        <span class="mobile-nav-icon">🛒</span>
+        Carrito
+        <span id="mobile-carrito-badge" class="mobile-nav-badge hidden">0</span>
+      </button>
+      <button class="mobile-nav-btn" data-section="ordenes" onclick="showSection('ordenes')">
+        <span class="mobile-nav-icon">📦</span>
+        Órdenes
+      </button>
+    </div>
+  </nav>
+
+  <!-- ══════════════ TOASTS ══════════════ -->
+  <div id="toast-container" role="status" aria-live="polite"></div>
+
+  <!-- ══════════════ MODAL AGREGAR AL CARRITO ══════════════ -->
+  <div id="modal-agregar" class="modal-overlay hidden" onclick="cerrarModalIfOutside(event)" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Agregar al Carrito</h3>
+        <button class="btn-icon" onclick="cerrarModal()" title="Cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-producto-info">
+          <div class="modal-producto-nombre" id="modal-producto-nombre"></div>
+          <div class="modal-producto-precio" id="modal-producto-precio"></div>
+        </div>
+        <div class="cantidad-control">
+          <label>Cantidad</label>
+          <div class="cantidad-row">
+            <button class="qty-btn" onclick="cambiarCantidad(-1)" type="button">−</button>
+            <input type="number" id="modal-cantidad" value="1" min="1" max="99"
+              oninput="actualizarSubtotalModal()">
+            <button class="qty-btn" onclick="cambiarCantidad(1)" type="button">+</button>
+          </div>
+        </div>
+        <div id="modal-subtotal" class="modal-subtotal"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn-primary" id="btn-confirmar-agregar" onclick="confirmarAgregar()">
+          🛒 Agregar al Carrito
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

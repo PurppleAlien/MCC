@@ -1,16 +1,13 @@
-FROM maven:3.9-eclipse-temurin-17 AS builder
+FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /app
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
 COPY src ./src
-RUN mvn package -DskipTests -B
+RUN apk add --no-cache maven && mvn -q package -DskipTests
 
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-RUN groupadd -g 1001 appgroup && useradd -u 1001 -g appgroup appuser
-COPY --from=builder /app/target/*.jar app.jar
-USER appuser
-EXPOSE 8083
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8090
 ENTRYPOINT ["java", \
   "-XX:+UseContainerSupport", \
   "-XX:MaxRAMPercentage=60.0", \

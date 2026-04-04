@@ -1,0 +1,446 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{parskip}
+
+\geometry{
+  top=2.5cm,
+  bottom=2.5cm,
+  left=3cm,
+  right=2.5cm
+}
+
+\definecolor{codebg}{rgb}{0.95,0.95,0.95}
+\definecolor{codeframe}{rgb}{0.7,0.7,0.7}
+\definecolor{keywordcolor}{rgb}{0.0,0.3,0.6}
+\definecolor{commentcolor}{rgb}{0.3,0.5,0.3}
+\definecolor{stringcolor}{rgb}{0.6,0.1,0.1}
+
+\lstset{
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{keywordcolor}\bfseries,
+  commentstyle=\color{commentcolor}\itshape,
+  stringstyle=\color{stringcolor},
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  tabsize=2,
+  captionpos=b,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=5pt
+}
+
+\lstdefinelanguage{yaml}{
+  keywords={true,false,null,yes,no},
+  keywordstyle=\color{keywordcolor}\bfseries,
+  sensitive=false,
+  comment=[l]{\#},
+  commentstyle=\color{commentcolor}\itshape,
+  stringstyle=\color{stringcolor},
+  morestring=[b]',
+  morestring=[b]"
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small UAMIShop -- Entrega de Proyecto}
+\lhead{\small Universidad Aut\'onoma Metropolitana}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  urlcolor=blue!60!black,
+  citecolor=blue!60!black,
+  pdftitle={UAMIShop - Entrega de Proyecto},
+  pdfauthor={UAM},
+  pdfsubject={Microservicios Spring Boot}
+}
+
+\titleformat{\section}{\large\bfseries}{}{0em}{\thesection\quad}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{\thesubsection\quad}
+
+\begin{document}
+
+%-----------------------------------------------------------------------
+% PORTADA
+%-----------------------------------------------------------------------
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+
+  {\Large\bfseries Universidad Aut\'onoma Metropolitana\par}
+  \vspace{0.3cm}
+  {\large Unidad Iztapalapa\par}
+  \vspace{0.3cm}
+  {\large Divisi\'on de Ciencias B\'asicas e Ingenier\'ia\par}
+
+  \vspace{1.5cm}
+  \rule{\linewidth}{0.8pt}\\[0.4cm]
+  {\LARGE\bfseries UAMIShop\par}
+  \vspace{0.3cm}
+  {\Large Sistema de E-commerce con Microservicios\par}
+  \rule{\linewidth}{0.8pt}
+
+  \vspace{1.2cm}
+  {\large\itshape Entrega de Proyecto Final\par}
+  \vspace{0.5cm}
+  {\normalsize Temas Selectos de Ingenier\'ia de Software\par}
+
+  \vfill
+
+  \begin{tabular}{ll}
+    \textbf{Curso:}       & Temas Selectos de Ingenier\'ia de Software \\[4pt]
+    \textbf{Programa:}    & Maestr\'ia en Computaci\'on y Comunicaciones \\[4pt]
+    \textbf{Fecha:}       & Abril 2026 \\[4pt]
+    \textbf{Versi\'on:}   & 1.0 \\
+  \end{tabular}
+
+  \vspace{1cm}
+\end{titlepage}
+
+%-----------------------------------------------------------------------
+% TABLA DE CONTENIDOS
+%-----------------------------------------------------------------------
+\tableofcontents
+\newpage
+
+%-----------------------------------------------------------------------
+% 1. INTRODUCCION
+%-----------------------------------------------------------------------
+\section{Introducci\'on y Objetivos del Proyecto}
+
+UAMIShop es un sistema de comercio electr\'onico desarrollado con una arquitectura basada
+en microservicios, utilizando Spring Boot 3.1 como plataforma principal de desarrollo.
+El proyecto tiene como finalidad demostrar la aplicaci\'on pr\'actica de patrones de dise\~no
+modernos, principios de arquitectura distribuida y t\'ecnicas de pruebas de integraci\'on en
+un contexto acad\'emico.
+
+\subsection{Objetivos Generales}
+
+\begin{itemize}
+  \item Implementar una arquitectura de microservicios funcional que cubra el flujo completo
+        de un sistema de e-commerce: cat\'alogo de productos, carrito de compras, gesti\'on
+        de \'ordenes y procesamiento de ventas.
+  \item Aplicar patrones de dise\~no avanzados como \textit{Domain-Driven Design} (DDD),
+        arquitectura hexagonal, \textit{Circuit Breaker} y el patr\'on \textit{Outbox}.
+  \item Integrar un bus de mensajer\'ia as\'incrona mediante RabbitMQ para la comunicaci\'on
+        entre servicios.
+  \item Proveer una interfaz de usuario funcional servida a trav\'es de Nginx.
+  \item Garantizar la calidad mediante pruebas de integraci\'on automatizadas con el
+        framework Karate.
+\end{itemize}
+
+\subsection{Objetivos Espec\'ificos}
+
+\begin{itemize}
+  \item Configurar un API Gateway centralizado con Spring Cloud Gateway que enrute las
+        peticiones entrantes hacia los microservicios correspondientes.
+  \item Implementar resiliencia en el servicio de ventas mediante \textit{Circuit Breaker}
+        con Resilience4j para tolerar fallos en el servicio de cat\'alogo.
+  \item Garantizar consistencia eventual en el servicio de \'ordenes mediante el patr\'on
+        \textit{Outbox} con publicaci\'on de eventos a RabbitMQ.
+  \item Contenerizar la totalidad de la soluci\'on con Docker Compose para facilitar el
+        despliegue y la reproducci\'on del entorno.
+\end{itemize}
+
+%-----------------------------------------------------------------------
+% 2. ARQUITECTURA
+%-----------------------------------------------------------------------
+\section{Arquitectura del Sistema}
+
+La arquitectura de UAMIShop sigue el modelo de microservicios, donde cada servicio es
+aut\'onomo, posee su propia base de datos (patr\'on \textit{Database per Service}) y se
+comunica con el resto a trav\'es del API Gateway (comunicaci\'on s\'incrona HTTP) y
+RabbitMQ (comunicaci\'on as\'incrona por eventos).
+
+La figura l\'ogica del sistema puede describirse de la siguiente manera:
+
+\begin{center}
+  \texttt{Cliente (Navegador)} $\rightarrow$ \texttt{Nginx / Frontend (3000)} \\
+  $\downarrow$ \\
+  \texttt{API Gateway (8090)} \\
+  $\downarrow$ \\
+  \texttt{Microservicios (8080--8083)}
+  $\leftrightarrow$ \texttt{MySQL} \\
+  \hspace{3.5cm} $\updownarrow$ \\
+  \hspace{3.5cm} \texttt{RabbitMQ}
+\end{center}
+
+\subsection{Microservicios}
+
+\begin{longtable}{@{}p{4.2cm}p{1.4cm}p{2.5cm}p{5.8cm}@{}}
+  \toprule
+  \textbf{Servicio} & \textbf{Puerto} & \textbf{Base de Datos} & \textbf{Descripci\'on} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{Servicio} & \textbf{Puerto} & \textbf{Base de Datos} & \textbf{Descripci\'on} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  uamishop (demo)        & 8080 & uamishop\_db      & Servicio base / demo del proyecto. \\[4pt]
+  uamishop-catalogo      & 8081 & catalogo\_db      & Gesti\'on de productos y categor\'ias. Expone CRUD completo con validaci\'on de SKU (\texttt{[A-Z]\{3\}-\textbackslash d\{3\}}). \\[4pt]
+  uamishop-ordenes       & 8082 & ordenes\_db       & Creaci\'on y seguimiento de \'ordenes de compra. Implementa el patr\'on Outbox para publicaci\'on de eventos. \\[4pt]
+  uamishop-ventas        & 8083 & ventas\_db        & Gesti\'on de carritos de compra y procesamiento de pagos. Implementa Circuit Breaker sobre el cat\'alogo. \\[4pt]
+  uamishop-gateway       & 8090 & ---               & API Gateway centralizado (Spring Cloud Gateway). Enruta y balancea las peticiones. \\[4pt]
+  uamishop-frontend      & 3000 & ---               & Interfaz de usuario est\'atica (HTML/CSS/JS) servida por Nginx. \\
+\end{longtable}
+
+\subsection{Infraestructura de Soporte}
+
+\begin{itemize}
+  \item \textbf{MySQL 8:} Cada microservicio con estado dispone de su propia instancia de
+        base de datos dentro de la red Docker, garantizando aislamiento de datos.
+  \item \textbf{RabbitMQ 3 (management):} Broker de mensajer\'ia configurado con un
+        \textit{topic exchange} llamado \texttt{uamishop.exchange}. Accesible v\'ia
+        consola de administraci\'on en el puerto 15672.
+  \item \textbf{Docker Compose:} Orquestador local que levanta la totalidad de los
+        contenedores con sus dependencias, redes y vol\'umenes persistentes.
+\end{itemize}
+
+%-----------------------------------------------------------------------
+% 3. PATRONES IMPLEMENTADOS
+%-----------------------------------------------------------------------
+\section{Patrones de Dise\~no Implementados}
+
+\subsection{Domain-Driven Design (DDD) y Bounded Contexts}
+
+Cada microservicio representa un \textit{Bounded Context} bien definido dentro del
+dominio del e-commerce:
+
+\begin{itemize}
+  \item \textbf{Cat\'alogo:} Gestiona el agregado \texttt{Producto} con sus propiedades
+        (SKU, nombre, descripci\'on, precio, stock, categor\'ia). La validaci\'on del
+        SKU es una regla de negocio del dominio.
+  \item \textbf{Ordenes:} Gestiona el ciclo de vida de una \texttt{Orden}, desde su
+        creaci\'on (\texttt{CREADA}) hasta su confirmaci\'on y pago (\texttt{PAGO\_PROCESADO}).
+  \item \textbf{Ventas:} Gestiona el agregado \texttt{Carrito} con sus \texttt{ItemCarrito}.
+        Coordina con el cat\'alogo para obtener datos de producto.
+\end{itemize}
+
+La arquitectura hexagonal (puertos y adaptadores) se aplica en cada servicio para aislar
+la l\'ogica de dominio de los detalles de infraestructura (JPA, REST, RabbitMQ).
+
+\subsection{Circuit Breaker con Resilience4j}
+
+El servicio \texttt{uamishop-ventas} implementa un \textit{Circuit Breaker} sobre las
+llamadas al servicio \texttt{uamishop-catalogo}. Cuando el cat\'alogo no est\'a disponible
+o responde con errores, el circuit breaker se abre y la operaci\'on de agregar productos
+al carrito retorna un error controlado (\texttt{HTTP 503}) en lugar de propagar el fallo.
+
+Configuraci\'on clave en \texttt{application.yml} de ventas:
+\begin{itemize}
+  \item \textbf{slidingWindowSize:} 5 peticiones para calcular la tasa de fallos.
+  \item \textbf{failureRateThreshold:} 50\% de fallos activa el estado OPEN.
+  \item \textbf{waitDurationInOpenState:} 10 segundos antes de pasar a HALF-OPEN.
+\end{itemize}
+
+\subsection{Outbox Pattern}
+
+El servicio \texttt{uamishop-ordenes} implementa el patr\'on \textit{Outbox} para
+garantizar consistencia eventual entre la base de datos y el broker de mensajer\'ia.
+Cuando se confirma o paga una orden, el evento se persiste primero en una tabla
+\texttt{outbox\_events} dentro de la misma transacci\'on de base de datos y,
+posteriormente, un proceso \textit{scheduler} lo publica en RabbitMQ. Esto evita
+la p\'erdida de mensajes en caso de fallos parciales.
+
+%-----------------------------------------------------------------------
+% 4. API GATEWAY
+%-----------------------------------------------------------------------
+\section{API Gateway}
+
+El API Gateway centraliza el acceso a todos los microservicios desde un \'unico punto
+de entrada (\texttt{localhost:8090}). Las rutas est\'an configuradas en
+\texttt{uamishop-gateway/src/main/resources/application.yml}.
+
+\begin{longtable}{@{}p{5cm}p{2.5cm}p{6cm}@{}}
+  \toprule
+  \textbf{Patr\'on de ruta} & \textbf{Destino} & \textbf{Descripci\'on} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{Patr\'on de ruta} & \textbf{Destino} & \textbf{Descripci\'on} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  \texttt{/api/v1/productos/**}   & catalogo:8081  & CRUD de productos del cat\'alogo. \\[4pt]
+  \texttt{/api/v1/categorias/**}  & catalogo:8081  & Gesti\'on de categor\'ias de productos. \\[4pt]
+  \texttt{/api/v1/carritos/**}    & ventas:8083    & Operaciones de carrito de compra. \\[4pt]
+  \texttt{/api/v1/ordenes/**}     & ordenes:8082   & Creaci\'on y consulta de \'ordenes. \\
+\end{longtable}
+
+%-----------------------------------------------------------------------
+% 5. RABBITMQ
+%-----------------------------------------------------------------------
+\section{Flujo de Eventos con RabbitMQ}
+
+RabbitMQ se utiliza para la comunicaci\'on as\'incrona entre microservicios. Se configura
+un \textit{topic exchange} llamado \texttt{uamishop.exchange}.
+
+\begin{longtable}{@{}p{4.5cm}p{4.5cm}p{4.5cm}@{}}
+  \toprule
+  \textbf{Cola (Queue)} & \textbf{Routing Key} & \textbf{Descripci\'on} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{Cola (Queue)} & \textbf{Routing Key} & \textbf{Descripci\'on} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  \texttt{ordenes.queue}         & \texttt{orden.confirmada}   & Notifica que una orden ha sido confirmada por el usuario. \\[4pt]
+  \texttt{ordenes.pago.queue}    & \texttt{orden.pago}         & Notifica que el pago de una orden ha sido procesado. \\[4pt]
+  \texttt{ventas.queue}          & \texttt{venta.procesada}    & Notifica que una venta ha sido completada exitosamente. \\
+\end{longtable}
+
+El patr\'on Outbox en \texttt{uamishop-ordenes} garantiza que cada evento sea publicado
+exactamente una vez, incluso ante fallos transitorios en la conexi\'on con RabbitMQ.
+
+%-----------------------------------------------------------------------
+% 6. FRONTEND
+%-----------------------------------------------------------------------
+\section{Frontend}
+
+El frontend de UAMIShop es una aplicaci\'on web est\'atica desarrollada con tecnolog\'ias
+nativas del navegador, sin dependencias de frameworks JavaScript externos.
+
+\begin{itemize}
+  \item \textbf{HTML5 / CSS3:} Estructura y estilos de la interfaz de usuario.
+  \item \textbf{JavaScript (Vanilla ES6+):} L\'ogica de interacci\'on, llamadas a la API
+        REST a trav\'es del Gateway y actualizaci\'on din\'amica del DOM.
+  \item \textbf{Nginx:} Servidor web que sirve los archivos est\'aticos del frontend
+        en el puerto 3000 y act\'ua como proxy inverso hacia el API Gateway.
+\end{itemize}
+
+Las funcionalidades implementadas en la interfaz incluyen:
+
+\begin{itemize}
+  \item Listado y b\'usqueda de productos del cat\'alogo.
+  \item A\~nadir productos al carrito de compras.
+  \item Visualizaci\'on del contenido del carrito.
+  \item Confirmaci\'on y pago de \'ordenes.
+  \item Consulta del estado de \'ordenes existentes.
+\end{itemize}
+
+%-----------------------------------------------------------------------
+% 7. DESPLIEGUE
+%-----------------------------------------------------------------------
+\section{Instrucciones de Despliegue}
+
+El proyecto se despliega completamente con Docker Compose. A continuaci\'on se describen
+los pasos necesarios para levantar el sistema en un entorno local.
+
+\subsection{Requisitos Previos}
+
+\begin{itemize}
+  \item Docker Engine 24+ y Docker Compose v2+.
+  \item Java 17+ y Maven 3.8+ (s\'olo para compilaci\'on sin Docker).
+  \item Puertos libres: 3000, 8080, 8081, 8082, 8083, 8090, 5672, 15672, 3306.
+\end{itemize}
+
+\subsection{Comandos de Despliegue}
+
+\begin{lstlisting}[language=bash, caption={Levantar el sistema completo}]
+# Clonar el repositorio
+git clone <url-repositorio> uamishop
+cd uamishop
+
+# Construir imagenes y levantar todos los contenedores
+docker compose up --build -d
+
+# Verificar que todos los contenedores esten corriendo
+docker ps
+
+# Ver logs de un servicio especifico
+docker compose logs -f uamishop-ventas
+
+# Detener el sistema
+docker compose down
+
+# Detener y eliminar volumenes (reset completo)
+docker compose down -v
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Verificaci\'on r\'apida del sistema}]
+# Health check del API Gateway
+curl http://localhost:8090/actuator/health
+
+# Listar productos via Gateway
+curl http://localhost:8090/api/v1/productos
+
+# Crear un carrito via Gateway
+curl -X POST http://localhost:8090/api/v1/carritos \
+  -H "Content-Type: application/json" \
+  -d '{"clienteId": "550e8400-e29b-41d4-a716-446655440000"}'
+
+# Acceder a la consola de administracion de RabbitMQ
+# URL: http://localhost:15672
+# Usuario: guest / Contrasena: guest
+\end{lstlisting}
+
+%-----------------------------------------------------------------------
+% 8. CONCLUSIONES
+%-----------------------------------------------------------------------
+\section{Conclusiones}
+
+El proyecto UAMIShop demuestra la viabilidad de implementar un sistema de e-commerce
+completo bajo una arquitectura de microservicios, aplicando patrones modernos de dise\~no
+de software en un contexto acad\'emico.
+
+Los principales logros del proyecto son:
+
+\begin{enumerate}
+  \item \textbf{Separaci\'on de responsabilidades:} Cada microservicio tiene un dominio
+        claramente delimitado, facilitando el mantenimiento y la escalabilidad independiente
+        de cada componente.
+
+  \item \textbf{Resiliencia:} La implementaci\'on del Circuit Breaker en el servicio de
+        ventas garantiza que el sistema contin\'ue operativo incluso cuando el servicio de
+        cat\'alogo experimenta problemas, retornando errores controlados al cliente.
+
+  \item \textbf{Consistencia eventual:} El patr\'on Outbox en el servicio de \'ordenes
+        asegura que ning\'un evento de negocio se pierda, manteniendo la coherencia entre
+        la base de datos y el sistema de mensajer\'ia.
+
+  \item \textbf{Calidad verificada:} Las pruebas de integraci\'on con Karate validan el
+        comportamiento end-to-end del sistema a trav\'es del API Gateway, con una tasa de
+        \'exito del 90.9\% (10 de 11 escenarios, siendo el fallo restante una condici\'on
+        de carrera relacionada con el estado del circuit breaker entre pruebas consecutivas).
+
+  \item \textbf{Despliegue reproducible:} La contenerizaci\'on completa con Docker Compose
+        garantiza que el sistema puede levantarse de manera determinista en cualquier
+        entorno compatible.
+\end{enumerate}
+
+Como trabajo futuro se identifican las siguientes oportunidades de mejora: implementaci\'on
+de autenticaci\'on y autorizaci\'on (JWT/OAuth2), observabilidad distribuida con Zipkin o
+Jaeger, escalado horizontal de microservicios cr\'iticos y migraci\'on a Kubernetes para
+entornos de producci\'on.
+
+\vfill
+\begin{center}
+  \small Universidad Aut\'onoma Metropolitana --- Unidad Iztapalapa --- Abril 2026
+\end{center}
+
+\end{document}

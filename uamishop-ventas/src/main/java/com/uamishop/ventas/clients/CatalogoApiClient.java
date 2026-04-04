@@ -3,6 +3,8 @@ package com.uamishop.ventas.clients;
 import com.uamishop.ventas.shared.domain.Money;
 import com.uamishop.ventas.shared.domain.ProductoId;
 import com.uamishop.ventas.shared.exception.RecursoNoEncontradoException;
+import com.uamishop.ventas.shared.exception.ServicioNoDisponibleException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -21,6 +23,7 @@ public class CatalogoApiClient {
         this.catalogoUrl = catalogoUrl;
     }
 
+    @CircuitBreaker(name = "catalogo", fallbackMethod = "fallbackObtenerProducto")
     public ProductoInfo obtenerProducto(ProductoId productoId) {
         String url = catalogoUrl + "/api/v1/productos/" + productoId.getValue();
         try {
@@ -35,6 +38,11 @@ public class CatalogoApiClient {
             }
             throw e;
         }
+    }
+
+    public ProductoInfo fallbackObtenerProducto(ProductoId productoId, Throwable t) {
+        throw new ServicioNoDisponibleException(
+            "El servicio de catalogo no esta disponible. Intente mas tarde.");
     }
 
     public record ProductoInfo(

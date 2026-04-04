@@ -26,4 +26,11 @@ COPY --from=builder /app/target/*.jar app.jar
 # Puerto del microservicio de ordenes
 EXPOSE 8082
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", \
+  "-XX:+UseContainerSupport", \
+  "-XX:MaxRAMPercentage=60.0", \
+  "-XX:InitialRAMPercentage=30.0", \
+  "-XX:+TieredCompilation", \
+  "-XX:TieredStopAtLevel=1", \
+  "-Djava.security.egd=file:/dev/./urandom", \
+  "-jar", "app.jar"]

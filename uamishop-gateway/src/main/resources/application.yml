@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: uamishop-gateway
+  cloud:
+    gateway:
+      routes:
+        # Microservicio de Ventas (Carrito)
+        - id: ventas
+          uri: ${VENTAS_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/carritos/**
+          filters:
+            - StripPrefix=0
+
+        # Microservicio de Ordenes
+        - id: ordenes
+          uri: ${ORDENES_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/ordenes/**
+          filters:
+            - StripPrefix=0
+
+        # Microservicio de Catalogo - productos
+        - id: catalogo-productos
+          uri: ${CATALOGO_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/productos/**
+          filters:
+            - StripPrefix=0
+
+        # Microservicio de Catalogo - categorias
+        - id: catalogo-categorias
+          uri: ${CATALOGO_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/categorias/**
+          filters:
+            - StripPrefix=0
+
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+
+server:
+  port: 8090
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    gateway:
+      enabled: true

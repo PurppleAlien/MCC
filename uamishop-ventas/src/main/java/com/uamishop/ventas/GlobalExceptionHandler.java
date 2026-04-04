@@ -3,6 +3,7 @@ package com.uamishop.ventas;
 import com.uamishop.ventas.dto.ApiError;
 import com.uamishop.ventas.shared.exception.BusinessRuleException;
 import com.uamishop.ventas.shared.exception.RecursoNoEncontradoException;
+import com.uamishop.ventas.shared.exception.ServicioNoDisponibleException;
 import com.uamishop.ventas.shared.exception.StockInsuficienteException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(ServicioNoDisponibleException.class)
+    public ResponseEntity<ApiError> handleServicioNoDisponible(
+            ServicioNoDisponibleException ex, WebRequest request) {
+        log.warn("Servicio no disponible: {}", ex.getMessage());
+        ApiError apiError = new ApiError(ex.getMessage(), HttpStatus.SERVICE_UNAVAILABLE.value(), "Service Unavailable", getPath(request));
+        return new ResponseEntity<>(apiError, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
     @ExceptionHandler({BusinessRuleException.class, StockInsuficienteException.class, IllegalStateException.class})
     public ResponseEntity<ApiError> handleBusinessRuleException(
             RuntimeException ex, WebRequest request) {
@@ -43,7 +52,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleIllegalArgument(
             IllegalArgumentException ex, WebRequest request) {
-        log.warn("Argumento inválido: {}", ex.getMessage());
+        log.warn("Argumento invalido: {}", ex.getMessage());
         ApiError apiError = new ApiError(ex.getMessage(), HttpStatus.BAD_REQUEST.value(), "Bad Request", getPath(request));
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
@@ -62,7 +71,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGenericException(Exception ex, WebRequest request) {
         log.error("Error interno del servidor", ex);
-        ApiError apiError = new ApiError("Ocurrió un error inesperado", HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error", getPath(request));
+        ApiError apiError = new ApiError("Ocurrio un error inesperado", HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error", getPath(request));
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

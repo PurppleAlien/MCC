@@ -4,13 +4,13 @@ import com.uamishop.ordenes.config.RabbitConfig;
 import com.uamishop.ordenes.ordenes.domain.*;
 import com.uamishop.ordenes.ordenes.dto.*;
 import com.uamishop.ordenes.ordenes.repository.OrdenJpaRepository;
+import com.uamishop.ordenes.outbox.service.OutboxService;
 import com.uamishop.ordenes.shared.domain.Money;
 import com.uamishop.ordenes.shared.event.OrdenCreadaEvent;
 import com.uamishop.ordenes.shared.event.ProductoCompradoEvent;
 import com.uamishop.ordenes.shared.event.ProductoCompradoEvent.ItemComprado;
 import com.uamishop.ordenes.shared.exception.RecursoNoEncontradoException;
 
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,12 +23,11 @@ import java.util.stream.Collectors;
 public class OrdenService {
 
     private final OrdenJpaRepository ordenRepository;
-    private final RabbitTemplate rabbitTemplate;
+    private final OutboxService outboxService;
 
-    public OrdenService(OrdenJpaRepository ordenRepository,
-                        RabbitTemplate rabbitTemplate) {
+    public OrdenService(OrdenJpaRepository ordenRepository, OutboxService outboxService) {
         this.ordenRepository = ordenRepository;
-        this.rabbitTemplate = rabbitTemplate;
+        this.outboxService = outboxService;
     }
 
     @Transactional
@@ -56,7 +55,7 @@ public class OrdenService {
 
         orden = ordenRepository.save(orden);
 
-        // Publicar evento orden.creada para que Ventas complete el checkout
+        // Guardar en outbox (misma transaccion) en lugar de publicar directamente
         OrdenCreadaEvent ordenCreadaEvent = new OrdenCreadaEvent(
                 UUID.randomUUID(),
                 Instant.now(),
@@ -64,10 +63,12 @@ public class OrdenService {
                 request.getCarritoId(),
                 orden.getClienteId().getValue()
         );
-        rabbitTemplate.convertAndSend(
-                RabbitConfig.EVENTS_EXCHANGE,
-                "orden.creada",
-                ordenCreadaEvent
+        outboxService.guardar(
+                "Orden",
+                orden.getId().getValue().toString(),
+                "OrdenCreadaEvent",
+                ordenCreadaEvent,
+                "orden.creada"
         );
 
         return OrdenResponse.fromOrden(orden);
@@ -102,7 +103,7 @@ public class OrdenService {
         orden.procesarPago("TARJETA", referenciaPago, "sistema");
         orden = ordenRepository.save(orden);
 
-        // Publicar evento producto.comprado para que Catalogo reduzca stock
+        // Guardar en outbox (misma transaccion) en lugar de publicar directamente
         List<ItemComprado> itemsComprados = orden.getItems().stream()
                 .map(item -> new ItemComprado(
                         item.getProductoId().getValue(),
@@ -121,10 +122,12 @@ public class OrdenService {
                 itemsComprados
         );
 
-        rabbitTemplate.convertAndSend(
-                RabbitConfig.EVENTS_EXCHANGE,
-                RabbitConfig.RK_PRODUCTO_COMPRADO,
-                event
+        outboxService.guardar(
+                "Orden",
+                orden.getId().getValue().toString(),
+                "ProductoCompradoEvent",
+                event,
+                RabbitConfig.RK_PRODUCTO_COMPRADO
         );
 
         return OrdenResponse.fromOrden(orden);

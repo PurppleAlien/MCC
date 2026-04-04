@@ -12,15 +12,35 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
+        jdbc.batch_size: 20
+        order_inserts: true
+        order_updates: true
+  datasource:
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 3000
+      idle-timeout: 300000
+      max-lifetime: 600000
+      connection-test-query: SELECT 1
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 springdoc:
   api-docs:

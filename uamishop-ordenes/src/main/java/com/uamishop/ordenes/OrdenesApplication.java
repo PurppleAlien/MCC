@@ -8,6 +8,7 @@ import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 @EnableAsync
+@org.springframework.scheduling.annotation.EnableScheduling
 public class OrdenesApplication {
 
     public static void main(String[] args) {
