@@ -6,6 +6,13 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:uamishop}
     password: ${SPRING_DATASOURCE_PASSWORD:uamishop}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 3000
+      idle-timeout: 300000
+      max-lifetime: 600000
+      connection-test-query: SELECT 1
   jpa:
     hibernate:
       ddl-auto: update
@@ -17,14 +24,6 @@ spring:
         jdbc.batch_size: 20
         order_inserts: true
         order_updates: true
-  datasource:
-    hikari:
-      minimum-idle: 2
-      maximum-pool-size: 10
-      connection-timeout: 3000
-      idle-timeout: 300000
-      max-lifetime: 600000
-      connection-test-query: SELECT 1
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST:localhost}
     port: 5672

@@ -4,22 +4,12 @@ server:
 spring:
   application:
     name: uamishop-catalogo
+
   datasource:
-    url: jdbc:mysql://localhost:3306/uamishop_catalogo?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: uamishop
-    password: uamishop
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/uamishop?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:uamishop}
+    password: ${SPRING_DATASOURCE_PASSWORD:uamishop}
     driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: false
-        jdbc.batch_size: 20
-        order_inserts: true
-        order_updates: true
-  datasource:
     hikari:
       minimum-idle: 2
       maximum-pool-size: 10
@@ -27,8 +17,21 @@ spring:
       idle-timeout: 300000
       max-lifetime: 600000
       connection-test-query: SELECT 1
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+        jdbc.batch_size: 20
+        order_inserts: true
+        order_updates: true
+
   rabbitmq:
-    host: localhost
+    host: ${SPRING_RABBITMQ_HOST:localhost}
     port: 5672
     username: guest
     password: guest

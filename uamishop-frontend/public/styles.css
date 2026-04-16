@@ -1445,3 +1445,127 @@ main {
 @media (max-width: 380px) {
   .products-grid { grid-template-columns: 1fr; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   PRODUCT CARD — imagen de portada
+   ══════════════════════════════════════════════════════════════════════ */
+.product-card-image {
+  width: 100%;
+  height: 175px;
+  overflow: hidden;
+  background: var(--bg-2);
+  flex-shrink: 0;
+}
+
+.product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.38s ease;
+}
+
+.product-card:hover .product-card-image img {
+  transform: scale(1.06);
+}
+
+.product-card-image.hidden { display: none; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   FORM — lista de imágenes dinámica (hasta 5 por producto)
+   ══════════════════════════════════════════════════════════════════════ */
+.field-full { grid-column: 1 / -1; }
+
+/* Cada fila de imagen */
+.img-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fafbfc;
+  margin-bottom: 8px;
+  transition: border-color var(--transition);
+}
+
+.img-row:focus-within { border-color: var(--primary); }
+
+.img-row-inputs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.img-url-input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.855rem;
+  background: white;
+  color: var(--text);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  min-width: 0;
+}
+
+.img-url-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.img-file-label {
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+.img-row-remove {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 7px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.img-row-remove:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Mini preview dentro de cada fila */
+.img-row-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.img-mini {
+  width: 96px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border);
+  display: block;
+  flex-shrink: 0;
+}
+
+.img-file-note {
+  font-size: 0.72rem;
+  color: #92400e;
+  background: var(--warning-bg);
+  padding: 5px 8px;
+  border-radius: var(--radius-xs);
+  line-height: 1.4;
+  align-self: center;
+}

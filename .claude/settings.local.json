@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sudo docker *)",
+      "Bash(file \"/home/purpplealien/Desktop/repositorios de git/MCC/doc/\"*.png)"
+    ]
+  }
+}

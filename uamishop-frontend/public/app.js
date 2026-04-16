@@ -124,10 +124,14 @@ function renderProductos(productos) {
     const safe = p.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     const stockPct = Math.min(100, Math.round((p.stock / 20) * 100));
     const categoriaColor = stringToHue(p.sku.substring(0, 3));
+    const firstImg = p.imagenesUrls?.[0];
+    const cardHeader = firstImg
+      ? `<div class="product-card-image"><img src="${firstImg}" alt="${safe}" loading="lazy" onerror="this.closest('.product-card-image').classList.add('hidden')"></div>`
+      : `<div class="product-card-accent" style="background:hsl(${categoriaColor},65%,55%)"></div>`;
 
     return `
     <div class="product-card fade-in" style="animation-delay:${i * 40}ms">
-      <div class="product-card-accent" style="background:hsl(${categoriaColor},65%,55%)"></div>
+      ${cardHeader}
       <div class="product-card-body">
         <div class="product-card-top">
           <span class="badge ${disponible ? 'badge-success' : 'badge-danger'}">
@@ -192,6 +196,8 @@ function toggleCrearProducto() {
   if (isHidden) {
     form.style.animation = 'slideDown 0.25s ease';
     document.getElementById('prod-nombre').focus();
+  } else {
+    limpiarImagen();
   }
 }
 
@@ -201,7 +207,8 @@ async function crearProducto() {
   const precio      = parseFloat(document.getElementById('prod-precio').value);
   const stock       = parseInt(document.getElementById('prod-stock').value);
   const descripcion = document.getElementById('prod-descripcion').value.trim();
-  const categoriaId = document.getElementById('prod-categoria').value;
+  const categoriaId  = document.getElementById('prod-categoria').value;
+  const imagenesUrls = _recogerImagenesUrls();
 
   if (!nombre || !sku || isNaN(precio) || isNaN(stock) || !categoriaId) {
     toast('Completa todos los campos obligatorios', 'error'); return;
@@ -218,7 +225,7 @@ async function crearProducto() {
     const res = await fetch(`${GATEWAY}/api/v1/productos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, sku, descripcion, precio, moneda: 'MXN', stock, categoriaId })
+      body: JSON.stringify({ nombre, sku, descripcion, precio, moneda: 'MXN', stock, categoriaId, imagenesUrls })
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -229,6 +236,7 @@ async function crearProducto() {
     ['prod-nombre','prod-sku','prod-precio','prod-stock','prod-descripcion']
       .forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('prod-categoria').value = '';
+    limpiarImagen();
     catalogoCargado = false; // Invalidar caché
     cargarProductos(true);
   } catch (e) {
@@ -740,9 +748,109 @@ function toast(msg, tipo = 'info') {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
+// IMÁGENES — lista dinámica de hasta 5 imágenes por producto
+// ══════════════════════════════════════════════════════════════════════════
+let _imgCounter = 0;
+
+function _crearFilaImagen(idx) {
+  const row = document.createElement('div');
+  row.className = 'img-row';
+  row.dataset.idx = idx;
+  row.innerHTML = `
+    <div class="img-row-inputs">
+      <input type="url" class="img-url-input"
+        placeholder="https://ejemplo.com/imagen.jpg"
+        oninput="_previewFilaUrl(this)">
+      <label class="btn-outline img-file-label" for="img-file-${idx}" title="Subir foto local">📷</label>
+      <input type="file" id="img-file-${idx}" accept="image/*" style="display:none"
+        onchange="_previewFilaArchivo(this)">
+      <button type="button" class="img-row-remove" onclick="_eliminarFila(this)" title="Quitar fila">✕</button>
+    </div>
+    <div class="img-row-preview hidden">
+      <img class="img-mini" src="" alt="preview"
+        onerror="this.closest('.img-row-preview').classList.add('hidden')">
+      <div class="img-file-note hidden">⚠ Vista previa local — no se guarda en el servidor</div>
+    </div>`;
+  return row;
+}
+
+function agregarFilaImagen() {
+  const lista = document.getElementById('imagenes-lista');
+  const filas = lista.querySelectorAll('.img-row');
+  if (filas.length >= 5) { toast('Máximo 5 imágenes por producto', 'info'); return; }
+  lista.appendChild(_crearFilaImagen(_imgCounter++));
+  _actualizarBtnAgregar();
+}
+
+function _eliminarFila(btn) {
+  const row = btn.closest('.img-row');
+  const preview = row.querySelector('.img-mini');
+  if (preview?.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+  row.remove();
+  _actualizarBtnAgregar();
+}
+
+function _previewFilaUrl(input) {
+  const url = input.value.trim();
+  const row = input.closest('.img-row');
+  const previewWrap = row.querySelector('.img-row-preview');
+  const previewImg  = row.querySelector('.img-mini');
+  const note        = row.querySelector('.img-file-note');
+  if (!url) { previewWrap.classList.add('hidden'); return; }
+  previewImg.src = url;
+  previewWrap.classList.remove('hidden');
+  note.classList.add('hidden');
+}
+
+function _previewFilaArchivo(fileInput) {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const row = fileInput.closest('.img-row');
+  const previewWrap = row.querySelector('.img-row-preview');
+  const previewImg  = row.querySelector('.img-mini');
+  const note        = row.querySelector('.img-file-note');
+  const urlInput    = row.querySelector('.img-url-input');
+  const objectUrl   = URL.createObjectURL(file);
+  previewImg.src = objectUrl;
+  previewWrap.classList.remove('hidden');
+  note.classList.remove('hidden');
+  urlInput.value = ''; // sin URL real → no se enviará al servidor
+}
+
+function _actualizarBtnAgregar() {
+  const lista = document.getElementById('imagenes-lista');
+  const btn   = document.getElementById('btn-add-img');
+  if (!btn) return;
+  const count = lista.querySelectorAll('.img-row').length;
+  btn.disabled = count >= 5;
+  btn.textContent = count >= 5 ? '✓ Máximo de imágenes alcanzado' : '+ Agregar imagen';
+}
+
+function limpiarImagen() {
+  const lista = document.getElementById('imagenes-lista');
+  if (!lista) return;
+  // liberar blob URLs antes de limpiar
+  lista.querySelectorAll('.img-mini').forEach(img => {
+    if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+  });
+  lista.innerHTML = '';
+  _imgCounter = 0;
+  agregarFilaImagen(); // dejar siempre 1 fila vacía
+  const btn = document.getElementById('btn-add-img');
+  if (btn) { btn.disabled = false; btn.textContent = '+ Agregar imagen'; }
+}
+
+function _recogerImagenesUrls() {
+  return Array.from(document.querySelectorAll('#imagenes-lista .img-url-input'))
+    .map(el => el.value.trim())
+    .filter(url => url.startsWith('http://') || url.startsWith('https://'));
+}
+
+// ══════════════════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
+  agregarFilaImagen(); // Primera fila de imágenes vacía en el formulario
   cargarProductos(true); // Primera carga forzada
 
   // Tecla Escape cierra el modal
